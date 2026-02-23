@@ -8,5 +8,10 @@
 <body>
     <h1>Welcome to the Basement Stacks</h1>
     <p>Your one-stop shop for all things music.</p>
+    <ul>
+    {% for release in releases %}
+        <li>{{ release.title }}</li>
+    {% endfor %}
+    </ul>
 </body>
 </html>

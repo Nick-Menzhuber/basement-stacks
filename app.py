@@ -1,11 +1,11 @@
 from flask import Flask, render_template
-from models import db
+from models import db, Release
 from dotenv import load_dotenv
 load_dotenv()
 import os
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///basement_stacks.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///basement_stacks.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -15,7 +15,8 @@ with app.app_context():
 
 @app.route('/')
 def welcome():
-    return render_template('index.html')
+    releases = Release.query.limit(10).all()
+    return render_template('index.html', releases=releases)
 
 if __name__ == '__main__':
     app.run(debug=True)
