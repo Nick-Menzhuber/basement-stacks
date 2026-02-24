@@ -10,7 +10,7 @@
     <p>Your one-stop shop for all things music.</p>
     <ul>
     {% for release in releases %}
-        <li>{{ release.title }}</li>
+        <li>{{release.artist.name}} - {{ release.title }}</li>
     {% endfor %}
     </ul>
 </body>

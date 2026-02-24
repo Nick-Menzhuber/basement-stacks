@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from models import db, Release
+from models import db, Release, Artist
 from dotenv import load_dotenv
 load_dotenv()
 import os
@@ -15,7 +15,7 @@ with app.app_context():
 
 @app.route('/')
 def welcome():
-    releases = Release.query.limit(10).all()
+    releases = Release.query.join(Artist).order_by(Artist.sort_name, Release.release_year).limit(30).all()
     return render_template('index.html', releases=releases)
 
 if __name__ == '__main__':
