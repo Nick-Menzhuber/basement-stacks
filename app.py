@@ -15,7 +15,7 @@ with app.app_context():
 
 @app.route('/')
 def welcome():
-    releases = Release.query.join(Artist).order_by(Artist.sort_name, Release.release_year).limit(30).all()
+    releases = Release.query.join(Artist).order_by(Artist.sort_name, Release.release_year).limit(1200).all()
     return render_template('index.html', releases=releases)
 
 if __name__ == '__main__':

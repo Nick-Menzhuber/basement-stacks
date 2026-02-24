@@ -1,0 +1,29 @@
+body {
+    font-family: sans-serif;
+    padding: 20px;
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+}
+
+.collection {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.release img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+}
+
+.release h2 {
+    font-size: 0.85rem;
+    margin: 5px 0;
+}
+
+.release p {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+    margin: 0;
+}
