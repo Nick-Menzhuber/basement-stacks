@@ -9,6 +9,19 @@ class Artist(db.Model):
     name = db.Column(db.String(200), nullable=False)
     sort_name = db.Column(db.String(200), nullable=False)
     is_various_artists = db.Column(db.Boolean, default=False)
+    discogs_artist_id = db.Column(db.String(50))
+    bio = db.Column(db.Text)
+    birthday = db.Column(db.Date)
+
+class Membership(db.Model):
+    __tablename__ = 'memberships'
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
+
+    artist = db.relationship('Artist', foreign_keys=[artist_id], backref=db.backref('group_memberships', lazy=True))
+    group = db.relationship('Artist', foreign_keys=[group_id], backref=db.backref('members', lazy=True))
 
 class Release(db.Model):
     __tablename__ = 'releases'
@@ -20,7 +33,10 @@ class Release(db.Model):
     release_date = db.Column(db.Date, nullable=True)
     sort_order = db.Column(db.Integer)
     discogs_id = db.Column(db.String(50))
+    master_id = db.Column(db.String(50))
+    tracklist = db.Column(db.Text)
     cover_image_url = db.Column(db.String(500))
+    custom_cover_image_url = db.Column(db.String(500))
     release_type = db.Column(db.String(50), default='album')
     is_customized = db.Column(db.Boolean, default=False)
     mood = db.Column(db.String(100))
