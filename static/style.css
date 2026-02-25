@@ -27,3 +27,28 @@ body {
     color: #aaaaaa;
     margin: 0;
 }
+
+ .cover-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.cover-wrapper img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+}
+
+.format-icons {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    display: flex;
+    gap: 3px;
+}
+
+.format-icon {
+    width: 16px;
+    height: 16px;
+}
