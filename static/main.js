@@ -6,7 +6,7 @@ let hasNext = true;
 function toggleSort() {
     sort = sort === 'random' ? 'az' : 'random';
     document.getElementById('toggle-sort').textContent =
-        sort === 'random' ? 'Switch to A-Z' : 'Switch to Random';
+        sort === 'random' ? 'A-Z View' : 'Random View';
     page = 1;
     hasNext = true;
     document.getElementById('collection').innerHTML = '';
@@ -40,7 +40,7 @@ function loadReleases() {
                         <div class="format-icons">${icons}</div>
                     </div>
                     <h2>${release.title}</h2>
-                    <p>${release.artist}</p>
+                    <p>${release.artist}${release.release_year ? ' · ' + release.release_year : ''}</p>
                 `;
                 collection.appendChild(div);
                 });

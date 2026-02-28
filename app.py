@@ -22,7 +22,7 @@ def welcome():
 def api_releases():
     page = request.args.get('page', 1, type=int)
     sort = request.args.get('sort', 'random')
-    per_page = 30
+    per_page = 1200
 
     query = Release.query.join(Artist)
 

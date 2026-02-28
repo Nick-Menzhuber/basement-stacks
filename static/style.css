@@ -59,3 +59,25 @@ body {
     padding: 20px;
     color: #aaa;
 }
+
+#controls {
+    padding: 10px 20px 30px 20px;
+}
+
+#toggle-sort {
+    background: transparent;
+    border: 1px solid #f0f0f0;
+    color: #f0f0f0;
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 15px;
+}
+
+#toggle-sort:hover {
+    background: #f0f0f0;
+    color: #1a1a1a;
+}
