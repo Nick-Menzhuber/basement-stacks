@@ -52,3 +52,10 @@ body {
     width: 16px;
     height: 16px;
 }
+
+#loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    color: #aaa;
+}

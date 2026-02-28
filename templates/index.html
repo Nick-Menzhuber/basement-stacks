@@ -8,29 +8,19 @@
     <title>The Basement Stacks</title>
 </head>
 <body>
-    <h1>Welcome to the Basement Stacks</h1>
-    <p>What should we play?</p>
-<div class="collection">
-    {% for release in releases %}
-    <div class="release">
-        <div class="cover-wrapper">
-            <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
-            <div class="format-icons">
-                {% for format in release.formats %}
-                    {% if format.format_name == 'CD' %}
-                        <img src="/static/icons/cd.png" class="format-icon" title="CD">
-                    {% elif format.format_name == 'Cassette' %}
-                        <img src="/static/icons/cassette.png" class="format-icon" title="Cassette">
-                    {% else %}
-                        <img src="/static/icons/vinyl.png" class="format-icon" title="Vinyl">
-                    {% endif %}
-                {% endfor %}
-            </div>
-        </div>
-        <h2>{{ release.title }}</h2>
-        <p>{{ release.artist.name }}</p>
+    <div id="header">
+        <h1>Welcome to the Basement Stacks</h1>
+        <p>What should we play?</p>
     </div>
-    {% endfor %}
-</div>
+
+    <div class="controls">
+        <button id="toggle-sort" onclick="toggleSort()">Switch to A-Z</button>
+    </div>
+
+<div class="collection" id="collection"></div>
+
+<div id="loading">Loading...</div>
+
+<script src="/static/main.js"></script>
 </body>
 </html>
