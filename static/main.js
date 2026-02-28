@@ -65,6 +65,9 @@ function appendRelease(release) {
         <p>${release.artist}${release.release_year ? ' · ' + release.release_year : ''}</p>
     `;
     collection.appendChild(div);
+    div.addEventListener('click', () => {
+        window.location.href = `/release/${release.id}`;
+    });
 }
 
 function loadReleases() {

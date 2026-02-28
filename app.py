@@ -106,5 +106,11 @@ def api_search():
 
     return jsonify({'releases': data})
 
+@app.route('/release/<int:id>')
+def release_detail(id):
+    release = db.get_or_404(Release, id)
+    tracklist = json.loads(release.tracklist) if release.tracklist else []
+    return render_template('release.html', release=release, tracklist=tracklist)
+
 if __name__ == '__main__':
     app.run(debug=True)

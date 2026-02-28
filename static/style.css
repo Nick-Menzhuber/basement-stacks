@@ -11,6 +11,10 @@ body {
     gap: 20px;
 }
 
+.release {
+    cursor: pointer;
+}
+
 .release img {
     width: 100%;
     aspect-ratio: 1;
