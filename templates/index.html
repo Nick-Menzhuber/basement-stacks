@@ -13,8 +13,12 @@
         <p>What should we play?</p>
     </div>
 
-    <div class="controls">
-        <button id="toggle-sort" onclick="toggleSort()">Switch to A-Z</button>
+    <div id="controls">
+        <div id="search-wrapper">
+            <input type="text" id="search-bar" placeholder="Search artists, albums, songs, years...">
+            <span id="search-icon">🔍</span>
+        </div>
+        <button id="toggle-sort" onclick="toggleSort()">Random View</button>
     </div>
 
 <div class="collection" id="collection"></div>

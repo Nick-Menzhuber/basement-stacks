@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, json
 from models import db, Release, Artist
 from dotenv import load_dotenv
 load_dotenv()
@@ -47,6 +47,64 @@ def api_releases():
         'has_next': releases.has_next,
         'page': page
     })
+
+@app.route('/api/search')
+def api_search():
+    query = request.args.get('q', '').strip()
+
+    if not query:
+        return jsonify({'releases': []})
+
+    #Detect if query is a year or decade
+    if query.isdigit() and len(query) == 4:
+        releases = Release.query.join(Artist).filter(
+            Release.release_year == int(query)
+        ).order_by(Artist.sort_name, Release.release_year, Release.sort_order).all()
+    elif query.endswith('s') and query[:-1].isdigit():
+        decade_str = query[:-1]
+        if len(decade_str) == 2:
+            decade_start = int('19' + decade_str)
+        else:
+            decade_start = int(decade_str)
+        releases = Release.query.join(Artist).filter(
+            Release.release_year >= decade_start,
+            Release.release_year < decade_start + 10
+        ).order_by(Artist.sort_name, Release.release_year, Release.sort_order).all()
+    else:
+        search_term = f'%{query}'
+        releases = Release.query.join(Artist).filter(
+            db.or_(
+                Release.title.ilike(search_term),
+                Artist.name.ilike(search_term)
+            )
+        ).order_by(Artist.sort_name, Release.release_year).all()
+
+        #Also search tracklists
+        tracklist_matches = Release.query.join(Artist).filter(
+            Release.tracklist.isnot(None)
+        ).order_by(Artist.sort_name, Release.release_year, Release.sort_order).all()
+
+        for release in tracklist_matches:
+            if release not in releases:
+                try:
+                    tracks = json.loads(release.tracklist)
+                    for track in tracks:
+                        if query.lower() in track.get('title', '').lower():
+                            releases.append(release)
+                            break
+                except:
+                    pass
+        
+    data = [{
+        'id': r.id,
+        'title': r.title,
+        'artist': r.artist.name,
+        'cover_image_url': r.cover_image_url,
+        'release_year': r.release_year,
+        'formats': [f.format_name for f in r.formats]
+    } for r in releases]
+
+    return jsonify({'releases': data})
 
 if __name__ == '__main__':
     app.run(debug=True)
