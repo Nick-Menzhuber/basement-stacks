@@ -59,7 +59,7 @@ def api_search():
     if query.isdigit() and len(query) == 4:
         releases = Release.query.join(Artist).filter(
             Release.release_year == int(query)
-        ).order_by(Artist.sort_name, Release.release_year, Release.sort_order).all()
+        ).order_by(db.func.random()).all()
     elif query.endswith('s') and query[:-1].isdigit():
         decade_str = query[:-1]
         if len(decade_str) == 2:
@@ -69,7 +69,7 @@ def api_search():
         releases = Release.query.join(Artist).filter(
             Release.release_year >= decade_start,
             Release.release_year < decade_start + 10
-        ).order_by(Artist.sort_name, Release.release_year, Release.sort_order).all()
+        ).order_by(db.func.random()).all()
     else:
         search_term = f'%{query}'
         releases = Release.query.join(Artist).filter(
