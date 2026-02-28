@@ -1,3 +1,7 @@
+/* =====================
+   MAIN COLLECTION VIEW
+   ===================== */
+
 body {
     font-family: 'Fraunces', sans-serif;
     padding: 20px;
@@ -124,4 +128,103 @@ body {
     transform: translateY(-50%);
     color: #888888;
     pointer-events: none;
+}
+
+/* =====================
+   RELEASE DETAIL VIEW
+   ===================== */
+
+   #detail-header {
+    padding: 20px 20px 0 20px;
+}
+
+#back-link {
+    color: #f0f0f0;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+#back-link:hover {
+    text-decoration: underline;
+}
+
+#detail {
+    display: flex;
+    gap: 40px;
+    padding: 20px;
+    align-items: flex-start;
+}
+
+#detail-art img {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+}
+
+#detail-art .format-icons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+#detail-art .format-icon-large {
+    width: 30px;
+    height: 30px;
+}
+
+#detail-info h1 {
+    margin: 0 0 5px 0;
+    font-size: 2rem;
+}
+
+#detail-info h2 {
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+    font-weight: normal;
+    color: #aaaaaa;
+}
+
+.detail-year, .detail-genre {
+    margin: 0 0 5px 0;
+    color: #aaaaaa;
+    font-size: 0.9rem;
+}
+
+#detail-tracklist {
+    margin-top: 25px;
+}
+
+#detail-tracklist h3 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #aaaaaa;
+}
+
+.tracklist-track {
+    display: flex;
+    gap: 15px;
+    padding: 6px 0;
+    border-bottom: 1px solid #2a2a2a;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.track-position {
+    color: #aaaaaa;
+    min-width: 30px;
+}
+
+.track-duration {
+    margin-left: auto;
+    color: #aaaaaa;
+}
+
+.tracklist-heading {
+    font-weight: bold;
+    margin: 15px 0 5px 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
