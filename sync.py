@@ -79,7 +79,7 @@ def sync_item(item):
         name = fmt['name']
         descriptions = fmt.get('descriptions', [])
 
-        if name == 'Vinyl':
+        if 'Vinyl' in name:
             if '7"' in descriptions:
                 approved_formats.add('7"')
             else:
@@ -91,7 +91,7 @@ def sync_item(item):
         elif name == 'SACD':
             approved_formats.add('CD')
         # Everything else (Box Set, DVD, All Media, etc.) is ignored
-        
+
     for format_name in approved_formats:
         existing = Format.query.filter_by(release_id=release.id, format_name=format_name).first()
         if not existing:

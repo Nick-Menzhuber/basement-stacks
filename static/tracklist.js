@@ -1,10 +1,10 @@
 function getOrdinal(n) {
-    const ordinals = ['One', 'Two', 'Three', 'Four', 'Five', 'Six'];
+    const ordinals = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
     return ordinals[n - 1] || n;
 }
 
 function isVinylSideFormat(tracks) {
-    return tracks.some(t => t.position && /^[A-F]\d+$/.test(t.position));
+    return tracks.some(t => t.position && /^[A-Z]\d*$/.test(t.position));
 }
 
 function isDiscFormat(tracks) {
@@ -60,14 +60,22 @@ function buildSidedTracklist(tracks) {
     const sides = {};
     for (const track of tracks) {
         if (track.type_ === 'heading' || !track.position) continue;
-        const match = track.position.match(/^([A-F])(\d+)$/);
-        if (match) {
-            const letter = match[1];
-            const number = match[2];
+        
+        const fullMatch = track.position.match(/^([A-Z])(\d+)$/);
+        const bareMatch = track.position.match(/^([A-Z])$/);
+        
+        if (fullMatch) {
+            const letter = fullMatch[1];
+            const number = fullMatch[2];
             if (!sides[letter]) sides[letter] = [];
             sides[letter].push({ ...track, shortPosition: number });
+        } else if (bareMatch) {
+            const letter = bareMatch[1];
+            if (!sides[letter]) sides[letter] = [];
+            sides[letter].push({ ...track, shortPosition: '1' });
         }
     }
+    // rest of function stays the same
 
     const sideLetters = Object.keys(sides).sort();
     return buildPairedLayout(sideLetters, (letter) => {
