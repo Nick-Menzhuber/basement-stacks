@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>{{ release.title }} – The Basement Stacks</title>
 </head>
+
 <body>
     <div id="detail-header">
         <a href="/" id="back-link">← Back</a>
@@ -17,13 +19,13 @@
             <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
             <div class="format-icons">
                 {% for format in release.formats %}
-                    {% if format.format_name == 'CD' %}
-                        <img src="/static/icons/cd.png" class="format-icon-large" title="CD">
-                    {% elif format.format_name == 'Cassette' %}
-                        <img src="/static/icons/cassette.png" class="format-icon-large" title="Cassette">
-                    {% elif format.format_name == 'Vinyl' %}
-                        <img src="/static/icons/vinyl.png" class="format-icon-large" title="Vinyl">
-                    {% endif %}
+                {% if format.format_name == 'CD' %}
+                <img src="/static/icons/cd.png" class="format-icon-large" title="CD">
+                {% elif format.format_name == 'Cassette' %}
+                <img src="/static/icons/cassette.png" class="format-icon-large" title="Cassette">
+                {% elif format.format_name == 'Vinyl' %}
+                <img src="/static/icons/vinyl.png" class="format-icon-large" title="Vinyl">
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
@@ -32,32 +34,25 @@
             <h1>{{ release.title }}</h1>
             <h2>{{ release.artist.name }}</h2>
             {% if release.release_year %}
-                <p class="detail-year">{{ release.release_year }}</p>
+            <p class="detail-year">{{ release.release_year }}</p>
             {% endif %}
             {% if release.genre %}
-                <p class="detail-genre">{{ release.genre }}</p>
+            <p class="detail-genre">{{ release.genre }}</p>
             {% endif %}
             {% if release.notes %}
-                <p class="detail-notes">{{ release.notes }}</p>
+            <p class="detail-notes">{{ release.notes }}</p>
             {% endif %}
 
-            <div id="detail-tracklist">
-                <h3>Tracklist</h3>
-                {% for track in tracklist %}
-                    {% if track.type_ == 'heading' %}
-                        <p class="tracklist-heading">{{ track.title }}</p>
-                    {% else %}
-                        <p class="tracklist-track">
-                            <span class="track-position">{{ track.position }}</span>
-                            {{ track.title }}
-                            {% if track.duration %}
-                                <span class="track-duration">{{ track.duration }}</span>
-                            {% endif %}
-                        </p>
-                    {% endif %}
-                {% endfor %}
-            </div>
+            <div id="tracklist-container"></div>
         </div>
     </div>
+
+    <script src="/static/tracklist.js"></script>
+    <script>
+        const tracks = {{ tracklist | tojson }};
+        const formats = {{ release.formats | map(attribute = 'format_name') | list | tojson }};
+        document.getElementById('tracklist-container').innerHTML = buildTracklistHTML(tracks, formats);
+    </script>
 </body>
+
 </html>

@@ -74,19 +74,24 @@ def sync_item(item):
         db.session.flush()
 
     # Normalize and filter formats
-    FORMAT_MAP = {
-        'Vinyl': 'Vinyl',
-        'CD': 'CD',
-        'Cassette': 'Cassette',
-        'SACD': 'CD',
-    }
-
     approved_formats = set()
     for fmt in basic.get('formats', []):
-        normalized = FORMAT_MAP.get(fmt['name'])
-        if normalized:
-            approved_formats.add(normalized)
+        name = fmt['name']
+        descriptions = fmt.get('descriptions', [])
 
+        if name == 'Vinyl':
+            if '7"' in descriptions:
+                approved_formats.add('7"')
+            else:
+                approved_formats.add('Vinyl')
+        elif name == 'CD':
+            approved_formats.add('CD')
+        elif name == 'Cassette':
+            approved_formats.add('Cassette')
+        elif name == 'SACD':
+            approved_formats.add('CD')
+        # Everything else (Box Set, DVD, All Media, etc.) is ignored
+        
     for format_name in approved_formats:
         existing = Format.query.filter_by(release_id=release.id, format_name=format_name).first()
         if not existing:
