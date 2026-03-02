@@ -1,17 +1,27 @@
 let page = 1;
-let sort = 'random';
+let sort = 'az';
 let loading = false;
 let hasNext = true;
 
 function toggleSort() {
     sort = sort === 'random' ? 'az' : 'random';
     document.getElementById('toggle-sort').textContent =
-        sort === 'random' ? 'A-Z View' : 'Random View';
+        sort === 'az' ? 'A-Z View' : 'Random View';
     page = 1;
     hasNext = true;
     document.getElementById('collection').innerHTML = '';
     loadReleases();
 }
+
+const toggleBtn = document.getElementById('toggle-sort');
+
+toggleBtn.addEventListener('mouseenter', function() {
+    this.textContent = sort === 'az' ? 'Random View' : 'A-Z View';
+});
+
+toggleBtn.addEventListener('mouseleave', function() {
+    this.textContent = sort === 'az' ? 'A-Z View' : 'Random View';
+});
 
 function getFormatIcon(format) {
     if (format === 'CD') return '/static/icons/cd.png';
@@ -24,6 +34,7 @@ let searchTimeout = null;
 let isSearching = false;
 
 document.getElementById('search-bar').addEventListener('input', function() {
+    console.log('input fired:', this.value);
     clearTimeout(searchTimeout);
     const query = this.value.trim();
     

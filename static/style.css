@@ -74,10 +74,41 @@ body {
 
 #controls {
     padding: 10px 20px 20px 20px;
+}
+
+#search-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 15px;
+    margin-bottom: 10px;
+}
+
+#search-scope {
+    display: flex;
+    gap: 8px;
+}
+
+.scope-pill {
+    background: transparent;
+    border: 1px solid #555555;
+    color: #aaaaaa;
+    font-family: 'Fraunces', serif;
+    font-size: 0.75rem;
+    padding: 4px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.scope-pill:hover {
+    border-color: #f0f0f0;
+    color: #f0f0f0;
+}
+
+.scope-pill.active {
+    background: #f0f0f0;
+    border-color: #f0f0f0;
+    color: #1a1a1a;
 }
 
 #toggle-sort {
