@@ -2,6 +2,7 @@ let page = 1;
 let sort = 'az';
 let loading = false;
 let hasNext = true;
+let searchScope = 'albums';
 
 function toggleSort() {
     sort = sort === 'random' ? 'az' : 'random';
@@ -23,6 +24,39 @@ toggleBtn.addEventListener('mouseleave', function() {
     this.textContent = sort === 'az' ? 'A-Z View' : 'Random View';
 });
 
+const scopePlaceholders = {
+    'albums': 'Search artists and albums...',
+    'songs': 'Search song titles...',
+    'years': 'Search by year or decade (e.g. 1975, 70s)...'
+};
+
+document.querySelectorAll('.scope-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+        document.querySelectorAll('.scope-pill').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        searchScope = this.dataset.scope;
+        document.getElementById('search-bar').placeholder = scopePlaceholders[searchScope];
+
+        const query = document.getElementById('search-bar').value.trim();
+        if (query) {
+            fetch(`/api/search?q=${encodeURIComponent(query)}&scope=${searchScope}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('collection').innerHTML = '';
+                    data.releases.forEach(release => appendRelease(release));
+                });
+        }
+    });
+
+    pill.addEventListener('mouseenter', function() {
+        document.getElementById('search-bar').placeholder = scopePlaceholders[this.dataset.scope];
+    });
+
+    pill.addEventListener('mouseleave', function() {
+        document.getElementById('search-bar').placeholder = scopePlaceholders[searchScope];
+    });
+});
+
 function getFormatIcon(format) {
     if (format === 'CD') return '/static/icons/cd.png';
     if(format === 'Cassette') return '/static/icons/cassette.png';
@@ -37,7 +71,7 @@ document.getElementById('search-bar').addEventListener('input', function() {
     console.log('input fired:', this.value);
     clearTimeout(searchTimeout);
     const query = this.value.trim();
-    
+
     if (query === '') {
         isSearching = false;
         page = 1;
@@ -46,19 +80,17 @@ document.getElementById('search-bar').addEventListener('input', function() {
         loadReleases();
         return;
     }
-    
+
     searchTimeout = setTimeout(() => {
         isSearching = true;
-        fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        fetch(`/api/search?q=${encodeURIComponent(query)}&scope=${searchScope}`)
             .then(response => response.json())
             .then(data => {
                 document.getElementById('collection').innerHTML = '';
-                data.releases.forEach(release => {
-                    appendRelease(release);
-                });
+                data.releases.forEach(release => appendRelease(release));
             });
     }, 300);
-});
+});                           
 
 function appendRelease(release) {
     const collection = document.getElementById('collection');

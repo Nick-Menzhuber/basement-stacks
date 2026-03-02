@@ -17,17 +17,11 @@
     <div id="detail">
         <div id="detail-art">
             <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
-            <div class="format-icons">
+            <p class="available-on">Available on: 
                 {% for format in release.formats %}
-                {% if format.format_name == 'CD' %}
-                <img src="/static/icons/cd.png" class="format-icon-large" title="CD">
-                {% elif format.format_name == 'Cassette' %}
-                <img src="/static/icons/cassette.png" class="format-icon-large" title="Cassette">
-                {% elif format.format_name == 'Vinyl' %}
-                <img src="/static/icons/vinyl.png" class="format-icon-large" title="Vinyl">
-                {% endif %}
+                    <span class="format-link">{{ format.format_name }}</span>{% if not loop.last %} and {% endif %}
                 {% endfor %}
-            </div>
+            </p>
         </div>
 
         <div id="detail-info">

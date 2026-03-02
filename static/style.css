@@ -190,6 +190,7 @@ body {
     width: 300px;
     height: 300px;
     object-fit: cover;
+    position: relative;
 }
 
 #detail-art .format-icons {
@@ -307,4 +308,14 @@ body {
     color: #aaaaaa;
     min-width: 60px;
     font-size: 0.85rem;
+}
+
+.available-on {
+    color: #aaaaaa;
+    font-size: 0.9rem;
+    margin: 10px 0;
+}
+
+.format-link {
+    color: #f0f0f0;
 }

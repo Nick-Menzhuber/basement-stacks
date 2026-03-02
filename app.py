@@ -51,27 +51,46 @@ def api_releases():
 @app.route('/api/search')
 def api_search():
     query = request.args.get('q', '').strip()
+    scope = request.args.get('scope', 'albums')
 
     if not query:
         return jsonify({'releases': []})
 
-    #Detect if query is a year or decade
-    if query.isdigit() and len(query) == 4:
-        releases = Release.query.join(Artist).filter(
-            Release.release_year == int(query)
-        ).order_by(db.func.random()).all()
-    elif query.endswith('s') and query[:-1].isdigit():
-        decade_str = query[:-1]
-        if len(decade_str) == 2:
-            decade_start = int('19' + decade_str)
+    if scope == 'years':
+        if query.isdigit() and len(query) == 4:
+            releases = Release.query.join(Artist).filter(
+                Release.release_year == int(query)
+            ).order_by(db.func.random()).all()
+        elif query.endswith('s') and query[:-1].isdigit():
+            decade_str = query[:-1]
+            if len(decade_str) == 2:
+                decade_start = int('19' + decade_str)
+            else:
+                decade_start = int(decade_str)
+            releases = Release.query.join(Artist).filter(
+                Release.release_year >= decade_start,
+                Release.release_year < decade_start + 10
+            ).order_by(db.func.random()).all()
         else:
-            decade_start = int(decade_str)
-        releases = Release.query.join(Artist).filter(
-            Release.release_year >= decade_start,
-            Release.release_year < decade_start + 10
-        ).order_by(db.func.random()).all()
-    else:
-        search_term = f'%{query}'
+            releases = []
+
+    elif scope == 'songs':
+        releases = []
+        tracklist_matches = Release.query.join(Artist).filter(
+            Release.tracklist.isnot(None)
+        ).order_by(Artist.sort_name, Release.release_year).all()
+        for release in tracklist_matches:
+            try:
+                tracks = json.loads(release.tracklist)
+                for track in tracks:
+                    if query.lower() in track.get('title', '').lower():
+                        releases.append(release)
+                        break
+            except:
+                pass
+
+    else:  # albums scope
+        search_term = f'%{query}%'
         releases = Release.query.join(Artist).filter(
             db.or_(
                 Release.title.ilike(search_term),
@@ -79,22 +98,6 @@ def api_search():
             )
         ).order_by(Artist.sort_name, Release.release_year).all()
 
-        #Also search tracklists
-        tracklist_matches = Release.query.join(Artist).filter(
-            Release.tracklist.isnot(None)
-        ).order_by(Artist.sort_name, Release.release_year, Release.sort_order).all()
-
-        for release in tracklist_matches:
-            if release not in releases:
-                try:
-                    tracks = json.loads(release.tracklist)
-                    for track in tracks:
-                        if query.lower() in track.get('title', '').lower():
-                            releases.append(release)
-                            break
-                except:
-                    pass
-        
     data = [{
         'id': r.id,
         'title': r.title,
