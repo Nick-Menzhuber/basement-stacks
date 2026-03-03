@@ -319,3 +319,84 @@ body {
 .format-link {
     color: #f0f0f0;
 }
+
+/* =====================
+   ARTIST PAGE
+   ===================== */
+
+   #artist-page {
+    padding: 20px;
+}
+
+#artist-header {
+    margin-bottom: 30px;
+}
+
+#artist-header h1 {
+    margin: 0 0 5px 0;
+}
+
+.artist-count {
+    color: #aaaaaa;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+#artist-shelf {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    cursor: grab;
+}
+
+#artist-shelf:active {
+    cursor: grabbing;
+}
+
+#artist-shelf::-webkit-scrollbar {
+    height: 6px;
+}
+
+#artist-shelf::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 3px;
+}
+
+#artist-shelf::-webkit-scrollbar-thumb {
+    background: #555555;
+    border-radius: 3px;
+}
+
+.shelf-item {
+    flex: 0 0 150px;
+    text-decoration: none;
+    color: #f0f0f0;
+}
+
+.shelf-item img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+}
+
+.shelf-title {
+    font-size: 0.8rem;
+    margin: 5px 0 2px 0;
+}
+
+.shelf-year {
+    font-size: 0.75rem;
+    color: #aaaaaa;
+    margin: 0;
+}
+
+.artist-link {
+    color: #aaaaaa;
+    text-decoration: none;
+}
+
+.artist-link:hover {
+    color: #f0f0f0;
+}

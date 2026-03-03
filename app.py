@@ -36,6 +36,7 @@ def api_releases():
     data = [{
         'id': r.id,
         'title': r.title,
+        'artist_id': r.artist.id,
         'artist': r.artist.name,
         'cover_image_url': r.cover_image_url,
         'release_year': r.release_year,
@@ -101,6 +102,7 @@ def api_search():
     data = [{
         'id': r.id,
         'title': r.title,
+        'artist_id': r.artist.id,
         'artist': r.artist.name,
         'cover_image_url': r.cover_image_url,
         'release_year': r.release_year,
@@ -114,6 +116,12 @@ def release_detail(id):
     release = db.get_or_404(Release, id)
     tracklist = json.loads(release.tracklist) if release.tracklist else []
     return render_template('release.html', release=release, tracklist=tracklist)
+
+@app.route('/artist/<int:id>')
+def artist_detail(id):
+    artist = db.get_or_404(Artist, id)
+    releases = Release.query.filter_by(artist_id=artist.id).order_by(Release.release_year, Release.sort_order).all()
+    return render_template('artist.html', artist=artist, releases=releases)
 
 if __name__ == '__main__':
     app.run(debug=True)

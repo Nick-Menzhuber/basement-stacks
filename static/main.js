@@ -105,7 +105,7 @@ function appendRelease(release) {
             <div class="format-icons">${icons}</div>
         </div>
         <h2>${release.title}</h2>
-        <p>${release.artist}${release.release_year ? ' · ' + release.release_year : ''}</p>
+        <p class="release-artist"><a href="/artist/${release.artist_id}" class="artist-link">${release.artist}</a>${release.release_year ? ' · <span class="release-year">' + release.release_year + '</span>' : ''}</p>
     `;
     collection.appendChild(div);
     div.addEventListener('click', () => {

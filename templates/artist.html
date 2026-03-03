@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>{{ artist.name }} – The Basement Stacks</title>
+</head>
+<body>
+    <div id="detail-header">
+        <a href="/" id="back-link">← Back</a>
+    </div>
+
+    <div id="artist-page">
+        <div id="artist-header">
+            <h1>{{ artist.name }}</h1>
+            <p class="artist-count">{{ releases|length }} release{{ 's' if releases|length != 1 else '' }} in the stacks</p>
+        </div>
+
+        <div id="artist-shelf">
+            {% for release in releases %}
+            <a href="/release/{{ release.id }}" class="shelf-item">
+                <div class="cover-wrapper">
+                    <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
+                </div>
+                <p class="shelf-title">{{ release.title }}</p>
+                <p class="shelf-year">{{ release.release_year or '' }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

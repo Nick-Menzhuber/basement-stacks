@@ -26,7 +26,7 @@
 
         <div id="detail-info">
             <h1>{{ release.title }}</h1>
-            <h2>{{ release.artist.name }}</h2>
+            <h2><a href="/artist/{{ release.artist.id }}" class="artist-link">{{ release.artist.name }}</a></h2>
             {% if release.release_year %}
             <p class="detail-year">{{ release.release_year }}</p>
             {% endif %}
