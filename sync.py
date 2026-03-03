@@ -1,4 +1,5 @@
 import requests
+import re
 import os
 import time 
 import json
@@ -16,6 +17,10 @@ headers = {
     'Authorization': f'Discogs token={token}',
     'User-Agent': 'BasementStacks/1.0'
 }
+
+def clean_artist_name(name):
+    return re.sub(r'\s*\(\d+\)\s*$', '', name).strip()
+
 
 def sync_item(item):
     basic = item['basic_information']
@@ -41,13 +46,13 @@ def sync_item(item):
         time.sleep(1)
 
     # Get or create artist
-    artist_name = basic['artists'][0]['name']
+    artist_name = clean_artist_name(basic['artists'][0]['name'])
     artist = Artist.query.filter_by(name=artist_name).first()
 
     if not artist:
         artist = Artist(
             name=artist_name,
-            sort_name=artist_name,
+            sort_name=clean_artist_name(basic['artists'][0]['name']),
             discogs_artist_id=str(basic['artists'][0]['id'])
         )
         db.session.add(artist)
