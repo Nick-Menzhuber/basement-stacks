@@ -21,10 +21,22 @@
             </div>
             <button id="toggle-sort" onclick="toggleSort()">A-Z View</button>
         </div>
-        <div id="search-scope">
-            <button class="scope-pill active" data-scope="albums">Albums & Artists</button>
-            <button class="scope-pill" data-scope="songs">Songs</button>
-            <button class="scope-pill" data-scope="years">Years</button>
+        <div id="search-controls">
+            <div id="search-scope">
+                <button class="scope-pill active" data-scope="albums">Albums & Artists</button>
+                <button class="scope-pill" data-scope="songs">Songs</button>
+                <button class="scope-pill" data-scope="years">Years</button>
+            </div>
+            <div id="format-filter">
+                <button id="format-pill">Format ▾</button>
+                <div id="format-dropdown">
+                    <button class="format-option active" data-format="all">All</button>
+                    <button class="format-option" data-format="Vinyl">Vinyl</button>
+                    <button class="format-option" data-format="7&quot;">7"</button>
+                    <button class="format-option" data-format="CD">CD</button>
+                    <button class="format-option" data-format="Cassette">Cassette</button>
+                </div>
+            </div>
         </div>
     </div>
 

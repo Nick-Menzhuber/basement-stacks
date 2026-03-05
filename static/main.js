@@ -82,15 +82,51 @@ document.getElementById('search-bar').addEventListener('input', function() {
     }
 
     searchTimeout = setTimeout(() => {
-        isSearching = true;
-        fetch(`/api/search?q=${encodeURIComponent(query)}&scope=${searchScope}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('collection').innerHTML = '';
-                data.releases.forEach(release => appendRelease(release));
-            });
+        runSearch(query);
     }, 300);
-});                           
+});   
+
+let activeFormat = 'all';
+
+const formatPill = document.getElementById('format-pill');
+const formatDropdown = document.getElementById('format-dropdown');
+
+formatPill.addEventListener('click', function(e) {
+    e.stopPropagation();
+    formatDropdown.classList.toggle('open');
+});
+
+document.addEventListener('click', function() {
+    formatDropdown.classList.remove('open');
+});
+
+document.querySelectorAll('.format-option').forEach(option => {
+    option.addEventListener('click', function() {
+        document.querySelectorAll('.format-option').forEach(o => o.classList.remove('active'));
+        this.classList.add('active');
+        activeFormat = this.dataset.format;
+        
+        // Update pill label
+        if (activeFormat === 'all') {
+            formatPill.textContent = 'Format ▾';
+            formatPill.classList.remove('active-filter');
+        } else {
+            formatPill.textContent = activeFormat + ' ▾';
+            formatPill.classList.add('active-filter');
+        }
+        
+        // Reload with new filter
+        const query = document.getElementById('search-bar').value.trim();
+        if (query) {
+            runSearch(query);
+        } else {
+            page = 1;
+            hasNext = true;
+            document.getElementById('collection').innerHTML = '';
+            loadReleases();
+        }
+    });
+});
 
 function appendRelease(release) {
     const collection = document.getElementById('collection');
@@ -118,7 +154,7 @@ function loadReleases() {
     loading = true;
     document.getElementById('loading').style.display = 'block';
 
-    fetch(`/api/releases?page=${page}&sort=${sort}`)
+    fetch(`/api/releases?page=${page}&sort=${sort}&format=${activeFormat}`)
         .then(response => response.json())
         .then(data => {
             const collection = document.getElementById('collection');
@@ -129,6 +165,16 @@ function loadReleases() {
                 document.getElementById('loading').style.display = 'none';
             });
     }
+
+function runSearch(query) {
+    isSearching = true;
+    fetch(`/api/search?q=${encodeURIComponent(query)}&scope=${searchScope}&format=${activeFormat}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('collection').innerHTML = '';
+            data.releases.forEach(release => appendRelease(release));
+        });
+}
 
     window.addEventListener('scroll', () => {
         if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {

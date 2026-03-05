@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request, json
-from models import db, Release, Artist
+from models import db, Release, Artist, Format
 from dotenv import load_dotenv
 load_dotenv()
 import os
@@ -21,10 +21,14 @@ def welcome():
 @app.route('/api/releases')
 def api_releases():
     page = request.args.get('page', 1, type=int)
-    sort = request.args.get('sort', 'random')
-    per_page = 1200
+    sort = request.args.get('sort', 'az')
+    format_filter = request.args.get('format', 'all')
+    per_page = 30
 
     query = Release.query.join(Artist)
+    
+    if format_filter != 'all':
+        query = query.join(Format).filter(Format.format_name == format_filter)
 
     if sort == 'az':
         query = query.order_by(Artist.sort_name, Release.release_year, Release.sort_order)
@@ -53,13 +57,17 @@ def api_releases():
 def api_search():
     query = request.args.get('q', '').strip()
     scope = request.args.get('scope', 'albums')
+    format_filter = request.args.get('format', 'all')
 
     if not query:
         return jsonify({'releases': []})
 
     if scope == 'years':
         if query.isdigit() and len(query) == 4:
-            releases = Release.query.join(Artist).filter(
+            q = Release.query.join(Artist)
+            if format_filter != 'all':
+                q = q.join(Format).filter(Format.format_name == format_filter)
+            releases = q.filter(
                 Release.release_year == int(query)
             ).order_by(db.func.random()).all()
         elif query.endswith('s') and query[:-1].isdigit():
@@ -68,7 +76,9 @@ def api_search():
                 decade_start = int('19' + decade_str)
             else:
                 decade_start = int(decade_str)
-            releases = Release.query.join(Artist).filter(
+                if format_filter != 'all':
+                    q = q.join(Format).filter(Format.format_name == format_filter)
+            releases = q.filter(
                 Release.release_year >= decade_start,
                 Release.release_year < decade_start + 10
             ).order_by(db.func.random()).all()
@@ -77,9 +87,10 @@ def api_search():
 
     elif scope == 'songs':
         releases = []
-        tracklist_matches = Release.query.join(Artist).filter(
-            Release.tracklist.isnot(None)
-        ).order_by(Artist.sort_name, Release.release_year).all()
+        q = Release.query.join(Artist).filter(Release.tracklist.isnot(None))
+        if format_filter != 'all':
+            q = q.join(Format).filter(Format.format_name == format_filter)
+        tracklist_matches = q.order_by(Artist.sort_name, Release.release_year).all()
         for release in tracklist_matches:
             try:
                 tracks = json.loads(release.tracklist)
@@ -92,12 +103,15 @@ def api_search():
 
     else:  # albums scope
         search_term = f'%{query}%'
-        releases = Release.query.join(Artist).filter(
+        q = Release.query.join(Artist).filter(
             db.or_(
                 Release.title.ilike(search_term),
                 Artist.name.ilike(search_term)
             )
-        ).order_by(Artist.sort_name, Release.release_year).all()
+        )
+        if format_filter != 'all':
+            q = q.join(Format).filter(Format.format_name == format_filter)
+        releases = q.order_by(Artist.sort_name, Release.release_year).all()
 
     data = [{
         'id': r.id,

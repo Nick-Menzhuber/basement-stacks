@@ -161,6 +161,87 @@ body {
     pointer-events: none;
 }
 
+#search-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+#search-scope {
+    display: flex;
+    gap: 8px;
+}
+
+#format-filter {
+    position: relative;
+}
+
+#format-pill {
+    background: transparent;
+    border: 1px solid #555555;
+    color: #aaaaaa;
+    font-family: 'Fraunces', serif;
+    font-size: 0.75rem;
+    padding: 4px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#format-pill:hover {
+    border-color: #f0f0f0;
+    color: #f0f0f0;
+}
+
+#format-pill.active-filter {
+    background: #f0f0f0;
+    border-color: #f0f0f0;
+    color: #1a1a1a;
+}
+
+#format-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: #2a2a2a;
+    border: 1px solid #555555;
+    border-radius: 12px;
+    padding: 6px;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 100;
+    min-width: 120px;
+}
+
+#format-dropdown.open {
+    display: flex;
+}
+
+.format-option {
+    background: transparent;
+    border: none;
+    color: #aaaaaa;
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.format-option:hover {
+    background: #3a3a3a;
+    color: #f0f0f0;
+}
+
+.format-option.active {
+    color: #f0f0f0;
+    font-weight: bold;
+}
+
 /* =====================
    RELEASE DETAIL VIEW
    ===================== */
@@ -324,7 +405,7 @@ body {
    ARTIST PAGE
    ===================== */
 
-   #artist-page {
+#artist-page {
     padding: 20px;
 }
 
