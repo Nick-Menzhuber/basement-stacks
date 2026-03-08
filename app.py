@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 import json
+import unicodedata
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///basement_stacks.db')
@@ -13,6 +14,11 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+
+def normalize_search(text):
+    if not text:
+        return None
+    return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii').lower()
 
 @app.template_filter('from_json')
 def from_json_filter(value):
@@ -110,16 +116,19 @@ def api_search():
                 pass
 
     else:  # albums scope
+        normalized_query = normalize_search(query)
         search_term = f'%{query}%'
+        normalized_term = f'%{normalized_query}%'
         q = Release.query.join(Artist).filter(
             db.or_(
                 Release.title.ilike(search_term),
-                Artist.name.ilike(search_term)
+                Artist.name.ilike(search_term),
+                Artist.search_name.ilike(normalized_term)
             )
         )
         if format_filter != 'all':
             q = q.join(Format).filter(Format.format_name == format_filter)
-        releases = q.order_by(Artist.sort_name, Release.release_year).all()
+        releases = q.order_by(Artist.sort_name, Release.release_year, Release.sort_order).all()
 
     data = [{
         'id': r.id,

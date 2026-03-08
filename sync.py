@@ -3,6 +3,7 @@ import re
 import os
 import time 
 import json
+import unicodedata
 from dotenv import load_dotenv
 from datetime import datetime
 from app import app, db
@@ -35,6 +36,11 @@ def clean_discogs_markup(text):
     # Remove [r=12345] release links entirely
     text = re.sub(r'\[r=\d+\]', '', text)
     return text.strip()
+
+def normalize_search(text):
+    if not text:
+        return None
+    return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii').lower()
 
 def sync_artist(artist):
     if not artist.discogs_artist_id:
@@ -149,10 +155,13 @@ def sync_item(item):
         artist = Artist(
             name=artist_name,
             sort_name=clean_artist_name(basic['artists'][0]['name']),
-            discogs_artist_id=str(basic['artists'][0]['id'])
+            discogs_artist_id=str(basic['artists'][0]['id']),
+            search_name=normalize_search(artist_name)
         )
         db.session.add(artist)
         db.session.flush()
+    else:
+        artist.search_name = normalize_search(artist_name)
 
     # Get or create release using master_id
     lookup_id = master_id if master_id else discogs_id
@@ -233,4 +242,4 @@ def sync_collection():
 
 if __name__ == '__main__':
     with app.app_context():
-        sync_collection()   
+        sync_collection()

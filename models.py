@@ -8,6 +8,7 @@ class Artist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     sort_name = db.Column(db.String(200), nullable=False)
+    search_name = db.Column(db.String(200), nullable=True)
     is_various_artists = db.Column(db.Boolean, default=False)
     discogs_artist_id = db.Column(db.String(50))
     profile = db.Column(db.Text, nullable=True)
