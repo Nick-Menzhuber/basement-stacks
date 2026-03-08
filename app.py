@@ -3,6 +3,7 @@ from models import db, Release, Artist, Format
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///basement_stacks.db')
@@ -12,6 +13,13 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+
+@app.template_filter('from_json')
+def from_json_filter(value):
+    try:
+        return json.loads(value)
+    except:
+        return []
 
 @app.route('/')
 def welcome():

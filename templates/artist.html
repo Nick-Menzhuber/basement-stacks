@@ -13,9 +13,25 @@
     </div>
 
     <div id="artist-page">
-        <div id="artist-header">
-            <h1>{{ artist.name }}</h1>
-            <p class="artist-count">{{ releases|length }} release{{ 's' if releases|length != 1 else '' }} in the stacks</p>
+        <div id="artist-hero">
+            {% if artist.image_url %}
+            <div id="artist-photo">
+                <img src="{{ artist.image_url }}" alt="{{ artist.name }}">
+            </div>
+            {% endif %}
+            <div id="artist-info">
+                <h1>{{ artist.name }}</h1>
+                <p class="artist-count">{{ releases|length }} album{{ 's' if releases|length != 1 else '' }} in the stacks</p>
+                {% if artist.custom_profile or artist.profile %}
+                <p class="artist-profile">{{ artist.custom_profile or artist.profile }}</p>
+                {% endif %}
+                {% if artist.urls %}
+                    {% set url_list = artist.urls | from_json %}
+                    {% if url_list %}
+                    <a href="{{ url_list[0] }}" target="_blank" class="artist-url">{{ url_list[0] }} →</a>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
 
         <div id="artist-shelf">
@@ -23,6 +39,17 @@
             <a href="/release/{{ release.id }}" class="shelf-item">
                 <div class="cover-wrapper">
                     <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
+                    <div class="format-icons">
+                        {% for format in release.formats %}
+                            {% if format.format_name == 'CD' %}
+                                <img src="/static/icons/cd.png" class="format-icon" title="CD">
+                            {% elif format.format_name == 'Cassette' %}
+                                <img src="/static/icons/cassette.png" class="format-icon" title="Cassette">
+                            {% elif format.format_name in ['Vinyl', '7"'] %}
+                                <img src="/static/icons/vinyl.png" class="format-icon" title="Vinyl">
+                                {% endif %}
+                        {% endfor %}
+                    </div>
                 </div>
                 <p class="shelf-title">{{ release.title }}</p>
                 <p class="shelf-year">{{ release.release_year or '' }}</p>

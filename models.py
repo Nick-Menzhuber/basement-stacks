@@ -10,7 +10,11 @@ class Artist(db.Model):
     sort_name = db.Column(db.String(200), nullable=False)
     is_various_artists = db.Column(db.Boolean, default=False)
     discogs_artist_id = db.Column(db.String(50))
-    bio = db.Column(db.Text)
+    profile = db.Column(db.Text, nullable=True)
+    custom_profile = db.Column(db.Text, nullable=True)
+    urls = db.Column(db.Text, nullable=True)
+    image_url = db.Column(db.String(500), nullable=True)
+    videos = db.Column(db.Text, nullable=True)
     birthday = db.Column(db.Date)
 
 class Membership(db.Model):
@@ -35,6 +39,7 @@ class Release(db.Model):
     discogs_id = db.Column(db.String(50))
     master_id = db.Column(db.String(50))
     tracklist = db.Column(db.Text)
+    individual_tracklist = db.Column(db.Text, nullable=True)
     cover_image_url = db.Column(db.String(500))
     custom_cover_image_url = db.Column(db.String(500))
     release_type = db.Column(db.String(50), default='album')
@@ -53,5 +58,6 @@ class Format(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     release_id = db.Column(db.Integer, db.ForeignKey('releases.id'), nullable=False)
     format_name = db.Column(db.String(50), nullable=False)
+    discogs_release_id = db.Column(db.String(50), nullable=True)
 
     release = db.relationship('Release', backref=db.backref('formats', lazy=True))
