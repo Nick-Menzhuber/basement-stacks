@@ -19,7 +19,18 @@
             <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
             <p class="available-on">Available on: 
                 {% for format in release.formats %}
-                    <span class="format-link">{{ format.format_name }}</span>{% if not loop.last %} and {% endif %}
+                    {% if format.format_name == 'Vinyl' %}
+                        <a href="/release/{{ release.id }}/vinyl" class="format-link">Vinyl</a>
+                    {% elif format.format_name == 'CD' %}
+                        <a href="/release/{{ release.id }}/cd" class="format-link">CD</a>
+                    {% elif format.format_name == 'Cassette' %}
+                        <a href="/release/{{ release.id }}/cassette" class="format-link">Cassette</a>
+                    {% elif format.format_name == '7"' %}
+                        <a href="/release/{{ release.id }}/7inch" class="format-link">7"</a>
+                    {% endif %}
+                    {% if not loop.last %}
+                        {% if loop.revindex == 2 %}{% if release.formats|length > 2 %}, and {% else %} and {% endif %}{% else %}, {% endif %}
+                    {% endif %}
                 {% endfor %}
             </p>
         </div>

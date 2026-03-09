@@ -132,9 +132,10 @@ function appendRelease(release) {
     const collection = document.getElementById('collection');
     const div = document.createElement('div');
     div.className = 'release';
-    const icons = release.formats.map(f =>
-        `<img src="${getFormatIcon(f)}" class="format-icon" title="${f}">`
-    ).join('');
+    const icons = release.formats.map(f => {
+        const slug = f === '7"' ? '7inch' : f.toLowerCase();
+        return `<a href="/release/${release.id}/${slug}" onclick="event.stopPropagation()"><img src="${getFormatIcon(f)}" class="format-icon" title="${f}"></a>`;
+    }).join('');
     div.innerHTML = `
         <div class="cover-wrapper">
             <img src="${release.cover_image_url}" alt="${release.title}">

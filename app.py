@@ -145,7 +145,10 @@ def api_search():
 @app.route('/release/<int:id>')
 def release_detail(id):
     release = db.get_or_404(Release, id)
-    tracklist = json.loads(release.tracklist) if release.tracklist else []
+    if len(release.formats) == 1 and release.individual_tracklist:
+        tracklist = json.loads(release.individual_tracklist)
+    else:
+        tracklist = json.loads(release.tracklist) if release.tracklist else []
     return render_template('release.html', release=release, tracklist=tracklist)
 
 @app.route('/artist/<int:id>')
@@ -153,6 +156,39 @@ def artist_detail(id):
     artist = db.get_or_404(Artist, id)
     releases = Release.query.filter_by(artist_id=artist.id).order_by(Release.release_year, Release.sort_order).all()
     return render_template('artist.html', artist=artist, releases=releases)
+
+@app.route('/release/<int:id>/<format_slug>')
+def release_detail_format(id, format_slug):
+    format_map = {
+        'vinyl': 'Vinyl',
+        'cd': 'CD',
+        'cassette': 'Cassette',
+        '7inch': '7"'
+    }
+    format_name = format_map.get(format_slug)
+    release = db.get_or_404(Release, id)
+    
+    fmt = Format.query.filter_by(
+        release_id=release.id,
+        format_name=format_name
+    ).first_or_404()
+
+    # Fetch the format-specific tracklist from Discogs
+    tracklist = []
+    if fmt.discogs_release_id:
+        import requests
+        token = os.getenv('DISCOGS_TOKEN')
+        headers = {
+            'Authorization': f'Discogs token={token}',
+            'User-Agent': 'BasementStacks/1.0'
+        }
+        url = f'https://api.discogs.com/releases/{fmt.discogs_release_id}'
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            tracklist = data.get('tracklist', [])
+    
+    return render_template('release.html', release=release, tracklist=tracklist, active_format=format_name)
 
 if __name__ == '__main__':
     app.run(debug=True)
