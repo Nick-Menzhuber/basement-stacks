@@ -7,7 +7,7 @@ class Artist(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
-    sort_name = db.Column(db.String(200), nullable=False)
+    sort_name = db.Column(db.String(500), nullable=False)
     search_name = db.Column(db.String(200), nullable=True)
     is_various_artists = db.Column(db.Boolean, default=False)
     discogs_artist_id = db.Column(db.String(50))
@@ -32,7 +32,7 @@ class Release(db.Model):
     __tablename__ = 'releases'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
+    title = db.Column(db.String(500), nullable=False)
     artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
     release_year = db.Column(db.Integer, nullable=True)
     release_date = db.Column(db.Date, nullable=True)
