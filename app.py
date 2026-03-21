@@ -42,7 +42,7 @@ def api_releases():
     format_filter = request.args.get('format', 'all')
     per_page = 30
 
-    query = Release.query.join(Artist)
+    query = Release.query.join(Artist).filter(Release.hidden == False, Artist.hidden == False)
     
     if format_filter != 'all':
         query = query.join(Format).filter(Format.format_name == format_filter)
@@ -57,8 +57,10 @@ def api_releases():
     data = [{
         'id': r.id,
         'title': r.title,
+        'short_title': r.short_title,
         'artist_id': r.artist.id,
         'artist': r.artist.name,
+        'sort_name': r.artist.sort_name,
         'cover_image_url': r.cover_image_url,
         'release_year': r.release_year,
         'formats': [f.format_name for f in r.formats]
@@ -136,6 +138,7 @@ def api_search():
     data = [{
         'id': r.id,
         'title': r.title,
+        'short_title': r.short_title,
         'artist_id': r.artist.id,
         'artist': r.artist.name,
         'cover_image_url': r.cover_image_url,
@@ -192,6 +195,13 @@ def release_detail_format(id, format_slug):
             tracklist = data.get('tracklist', [])
     
     return render_template('release.html', release=release, tracklist=tracklist, active_format=format_name)
+
+@app.route('/api/releases/count')
+def api_releases_count():
+    total = Release.query.filter(Release.hidden == False).count()
+    per_page = 30
+    total_pages = (total + per_page - 1) // per_page
+    return jsonify({'total_pages': total_pages})
 
 if __name__ == '__main__':
     app.run(debug=True)

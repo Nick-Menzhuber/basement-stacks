@@ -17,6 +17,7 @@ class Artist(db.Model):
     image_url = db.Column(db.String(500), nullable=True)
     videos = db.Column(db.Text, nullable=True)
     birthday = db.Column(db.Date)
+    hidden = db.Column(db.Boolean, nullable=True)
 
 class Membership(db.Model):
     __tablename__ = 'memberships'
@@ -33,6 +34,7 @@ class Release(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(500), nullable=False)
+    short_title = db.Column(db.String(200), nullable=True)
     artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
     release_year = db.Column(db.Integer, nullable=True)
     release_date = db.Column(db.Date, nullable=True)
@@ -49,6 +51,7 @@ class Release(db.Model):
     genre = db.Column(db.String(100))
     date_added = db.Column(db.DateTime)
     notes = db.Column(db.Text)
+    hidden = db.Column(db.Boolean, default=False)
 
 
     artist = db.relationship('Artist', backref=db.backref('releases', lazy=True))

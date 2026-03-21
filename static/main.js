@@ -1,8 +1,19 @@
-let page = 1;
+let startPage = 1;
+let currentPage = 1;
+let wrapped = false;
 let sort = 'az';
 let loading = false;
 let hasNext = true;
 let searchScope = 'albums';
+let currentLetter = 'null';
+
+async function init() {
+    const res = await fetch('/api/releases/count');
+    const data = await res.json();
+    startPage = Math.floor(Math.random() * data.total_pages) + 1;
+    currentPage = startPage;
+    loadReleases();
+}
 
 function toggleSort() {
     sort = sort === 'random' ? 'az' : 'random';
@@ -129,19 +140,30 @@ document.querySelectorAll('.format-option').forEach(option => {
 });
 
 function appendRelease(release) {
+    if (!isSearching) {
+        const sortLetter = release.sort_name[0].toUpperCase();
+        if (sortLetter !== currentLetter) {
+            currentLetter = sortLetter;
+            const divider = document.createElement('div');
+            divider.className = 'section-divider letter-divider';
+            divider.dataset.letter = sortLetter;
+            document.getElementById('collection').appendChild(divider);
+        }
+    }
     const collection = document.getElementById('collection');
     const div = document.createElement('div');
     div.className = 'release';
+    const displayTitle = release.short_title || release.title;
     const icons = release.formats.map(f => {
         const slug = f === '7"' ? '7inch' : f.toLowerCase();
         return `<a href="/release/${release.id}/${slug}" onclick="event.stopPropagation()"><img src="${getFormatIcon(f)}" class="format-icon" title="${f}"></a>`;
     }).join('');
     div.innerHTML = `
         <div class="cover-wrapper">
-            <img src="${release.cover_image_url}" alt="${release.title}">
+            <img src="${release.cover_image_url}" alt="${displayTitle}">
             <div class="format-icons">${icons}</div>
         </div>
-        <h2>${release.title}</h2>
+        <h2>${displayTitle}</h2>
         <p class="release-artist"><a href="/artist/${release.artist_id}" class="artist-link">${release.artist}</a>${release.release_year ? ' · <span class="release-year">' + release.release_year + '</span>' : ''}</p>
     `;
     collection.appendChild(div);
@@ -151,21 +173,35 @@ function appendRelease(release) {
 }
 
 function loadReleases() {
-    if (loading || !hasNext) return
+    if (loading || !hasNext) return;
     loading = true;
     document.getElementById('loading').style.display = 'block';
 
-    fetch(`/api/releases?page=${page}&sort=${sort}&format=${activeFormat}`)
+    fetch(`/api/releases?page=${currentPage}&sort=${sort}&format=${activeFormat}`)
         .then(response => response.json())
         .then(data => {
-            const collection = document.getElementById('collection');
             data.releases.forEach(release => appendRelease(release));
-                hasNext = data.has_next;
-                page++;
-                loading = false;
-                document.getElementById('loading').style.display = 'none';
-            });
-    }
+            loading = false;
+            document.getElementById('loading').style.display = 'none';
+
+            if (data.has_next && currentPage + 1 !== startPage) {
+                currentPage++;
+            } else if (!wrapped && startPage > 1) {
+                wrapped = true;
+                insertWrapDivider();
+                currentPage = 1;
+                hasNext = true;
+            } else {
+                hasNext = false;
+            }
+        });
+}
+
+function insertWrapDivider(){
+    const divider = document.createElement('div');
+    divider.className = 'section-divider wrap-divider';
+    document.getElementById('collection').appendChild(divider);
+}
 
 function runSearch(query) {
     isSearching = true;
@@ -183,4 +219,4 @@ function runSearch(query) {
     }
 });
 
-loadReleases();
+init();
