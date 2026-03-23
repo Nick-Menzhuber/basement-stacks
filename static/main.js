@@ -1,28 +1,114 @@
-let startPage = 1;
-let currentPage = 1;
-let wrapped = false;
 let sort = 'az';
 let loading = false;
-let hasNext = true;
+let page = 1;
 let searchScope = 'albums';
 let currentLetter = 'null';
+let allGrouped = {};
+let letterOrder = [];
+let currentLetterIndex = 0;
+let substantialLetters = [];
+let hasNext = true;
 
 async function init() {
-    const res = await fetch('/api/releases/count');
+    const res = await fetch('/api/releases/by-letter')
     const data = await res.json();
-    startPage = Math.floor(Math.random() * data.total_pages) + 1;
-    currentPage = startPage;
-    loadReleases();
+    allGrouped = data.grouped;
+    substantialLetters = data.substantial;
+
+    //Build letter order: # first, then A-Z
+    letterOrder = Object.keys(allGrouped).sort((a, b) => {
+        if (a === '#') return -1;
+        if (b === '#') return 1;
+        return a.localeCompare(b);
+    });
+
+    //Pick random substantial letter
+    const startLetter = substantialLetters[Math.floor(Math.random() * substantialLetters.length)];
+    currentLetterIndex = letterOrder.indexOf(startLetter);
+
+    buildLetterNav();
+    showLetter(currentLetterIndex);
+}
+
+function buildLetterNav() {
+    const nav = document.getElementById('letter-nav');
+    if (!nav) return;
+    nav.innerHTML = '';
+    letterOrder.forEach((letter, index) => {
+        const tab = document.createElement('button');
+        tab.className = 'letter-tab';
+        tab.textContent = letter;
+        tab.dataset.index = index;
+        if (index === currentLetterIndex) tab.classList.add('active');
+        tab.addEventListener('click', () => navigateToLetter(index));
+        nav.appendChild(tab);
+    });
+}
+
+function showLetter(index) {
+    currentLetterIndex = index;
+    const letter = letterOrder[index];
+    const collection = document.getElementById('collection');
+    collection.innerHTML = '';
+    const releases = allGrouped[letter] || [];
+    releases.forEach(release => appendRelease(release));
+    
+    // Update active tab
+    document.querySelectorAll('.letter-tab').forEach(tab => {
+        tab.classList.toggle('active', parseInt(tab.dataset.index) === index);
+    });
+    updateEdgeTabs();
+}
+
+function updateEdgeTabs() {
+    const prevTab = document.getElementById('prev-letter-tab');
+    const nextTab = document.getElementById('next-letter-tab');
+    
+    if (!isLetterNavActive()) {
+        prevTab.style.display = 'none';
+        nextTab.style.display = 'none';
+        return;
+    }
+    
+    const prevLetter = letterOrder[currentLetterIndex - 1];
+    const nextLetter = letterOrder[currentLetterIndex + 1];
+    
+    prevTab.style.display = prevLetter ? 'flex' : 'none';
+    nextTab.style.display = nextLetter ? 'flex' : 'none';
+    
+    prevTab.textContent = prevLetter || '';
+    nextTab.textContent = nextLetter || '';
+}
+
+function navigateToLetter(index) {
+    showLetter(index);
 }
 
 function toggleSort() {
     sort = sort === 'random' ? 'az' : 'random';
     document.getElementById('toggle-sort').textContent =
         sort === 'az' ? 'A-Z View' : 'Random View';
-    page = 1;
-    hasNext = true;
-    document.getElementById('collection').innerHTML = '';
-    loadReleases();
+    
+    const letterNav = document.getElementById('letter-nav');
+    const collection = document.getElementById('collection');
+    collection.innerHTML = '';
+    
+    if (sort === 'random' || !isLetterNavActive()) {
+        letterNav.style.display = 'none';
+        hasNext = true;
+        page = 1;
+        loading = false;
+        loadReleases();
+        updateEdgeTabs();
+    } else {
+        letterNav.style.display = 'flex';
+        showLetter(currentLetterIndex);
+        updateEdgeTabs();
+    }
+}
+
+function isLetterNavActive() {
+    return sort === 'az' && (activeFormat === 'all' || activeFormat === 'Vinyl');
 }
 
 const toggleBtn = document.getElementById('toggle-sort');
@@ -85,10 +171,19 @@ document.getElementById('search-bar').addEventListener('input', function() {
 
     if (query === '') {
         isSearching = false;
-        page = 1;
-        hasNext = true;
         document.getElementById('collection').innerHTML = '';
-        loadReleases();
+        const letterNav = document.getElementById('letter-nav');
+        
+        if (isLetterNavActive()) {
+            letterNav.style.display = 'flex';
+            buildLetterNav();
+            showLetter(currentLetterIndex);
+        } else {
+            letterNav.style.display = 'none';
+            hasNext = true;
+            loading = false;
+            loadReleases();
+        }
         return;
     }
 
@@ -131,25 +226,33 @@ document.querySelectorAll('.format-option').forEach(option => {
         if (query) {
             runSearch(query);
         } else {
-            page = 1;
-            hasNext = true;
-            document.getElementById('collection').innerHTML = '';
-            loadReleases();
+            const collection = document.getElementById('collection');
+            const letterNav = document.getElementById('letter-nav');
+            collection.innerHTML = '';
+            
+            if (isLetterNavActive()) {
+                letterNav.style.display = 'flex';
+                const startLetter = substantialLetters.includes(letterOrder[currentLetterIndex]) 
+                    ? letterOrder[currentLetterIndex] 
+                    : substantialLetters[0];
+                currentLetterIndex = letterOrder.indexOf(startLetter);
+                buildLetterNav();
+                showLetter(currentLetterIndex);
+                updateEdgeTabs();
+            } else {
+                letterNav.style.display = 'none';
+                document.getElementById('collection').innerHTML = '';
+                page = 1;
+                hasNext = true;
+                loading = false;
+                loadReleases();
+                updateEdgeTabs();
+            }
         }
     });
 });
 
 function appendRelease(release) {
-    if (!isSearching) {
-        const sortLetter = release.sort_name[0].toUpperCase();
-        if (sortLetter !== currentLetter) {
-            currentLetter = sortLetter;
-            const divider = document.createElement('div');
-            divider.className = 'section-divider letter-divider';
-            divider.dataset.letter = sortLetter;
-            document.getElementById('collection').appendChild(divider);
-        }
-    }
     const collection = document.getElementById('collection');
     const div = document.createElement('div');
     div.className = 'release';
@@ -177,23 +280,14 @@ function loadReleases() {
     loading = true;
     document.getElementById('loading').style.display = 'block';
 
-    fetch(`/api/releases?page=${currentPage}&sort=${sort}&format=${activeFormat}`)
+    fetch(`/api/releases?page=${page}&sort=${sort}&format=${activeFormat}`)
         .then(response => response.json())
         .then(data => {
             data.releases.forEach(release => appendRelease(release));
             loading = false;
             document.getElementById('loading').style.display = 'none';
-
-            if (data.has_next && currentPage + 1 !== startPage) {
-                currentPage++;
-            } else if (!wrapped && startPage > 1) {
-                wrapped = true;
-                insertWrapDivider();
-                currentPage = 1;
-                hasNext = true;
-            } else {
-                hasNext = false;
-            }
+            hasNext = data.has_next;
+            page++;
         });
 }
 
@@ -205,6 +299,7 @@ function insertWrapDivider(){
 
 function runSearch(query) {
     isSearching = true;
+    document.getElementById('letter-nav').style.display = 'none';
     fetch(`/api/search?q=${encodeURIComponent(query)}&scope=${searchScope}&format=${activeFormat}`)
         .then(response => response.json())
         .then(data => {
@@ -213,9 +308,11 @@ function runSearch(query) {
         });
 }
 
-    window.addEventListener('scroll', () => {
-        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+window.addEventListener('scroll', () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+        if (!isLetterNavActive() && !isSearching) {
             loadReleases();
+        }
     }
 });
 

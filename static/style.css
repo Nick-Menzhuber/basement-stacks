@@ -8,6 +8,69 @@ body {
     background-color: #1a1a1a;
     color: #f0f0f0;
 }
+#letter-nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+}
+
+.letter-tab {
+    background: none;
+    border: none;
+    color: #555555;
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.letter-tab:hover {
+    color: #f0f0f0;
+}
+
+.letter-tab.active {
+    color: #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.letter-edge-tab {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 80px;
+    background: #333333;
+    border: 1px solid #444444;
+    cursor: pointer;
+    transition: width 0.2s ease, background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    overflow: hidden;
+    z-index: 100;
+}
+
+#prev-letter-tab {
+    left: 0;
+    border-radius: 0 6px 6px 0;
+    border-left: none;
+}
+
+#next-letter-tab {
+    right: 0;
+    border-radius: 6px 0 0 6px;
+    border-right: none;
+}
+
+.letter-edge-tab:hover {
+    width: 40px;
+    background: #444444;
+    color: #f0f0f0;
+}
 
 .collection {
     display: grid;

@@ -203,5 +203,57 @@ def api_releases_count():
     total_pages = (total + per_page - 1) // per_page
     return jsonify({'total_pages': total_pages})
 
+@app.route('/api/releases/by-letter')
+def api_releases_by_letter():
+    format_filter = request.args.get('format', 'all')
+    
+    query = Release.query.join(Artist).filter(
+        Release.hidden == False,
+        Artist.hidden == False
+    )
+    
+    if format_filter != 'all':
+        query = query.join(Format).filter(Format.format_name == format_filter)
+    
+    query = query.order_by(Artist.sort_name, Release.release_year, Release.sort_order)
+    
+    releases = query.all()
+    
+    # Group by letter
+    grouped = {}
+    for r in releases:
+        sort_name = r.artist.sort_name or r.artist.name
+        first_char = sort_name[0].upper()
+        letter = '#' if first_char.isdigit() else first_char
+        if letter not in grouped:
+            grouped[letter] = []
+        grouped[letter].append({
+            'id': r.id,
+            'title': r.title,
+            'short_title': r.short_title,
+            'artist_id': r.artist.id,
+            'artist': r.artist.name,
+            'sort_name': r.artist.sort_name,
+            'cover_image_url': r.cover_image_url,
+            'release_year': r.release_year,
+            'formats': [f.format_name for f in r.formats]
+        })
+
+        if '#' in grouped:
+            def numeric_sort_key(r):
+                try:
+                    return int(''.join(filter(str.isdigit, r['sort_name'].split()[0])))
+                except:
+                    return 0
+            grouped['#'] = sorted(grouped['#'], key=numeric_sort_key)
+    
+    # Determine substantial letters (30+ releases)
+    substantial = [k for k, v in grouped.items() if len(v) >= 30]
+    
+    return jsonify({
+        'grouped': grouped,
+        'substantial': substantial
+    })
+
 if __name__ == '__main__':
     app.run(debug=True)
