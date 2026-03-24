@@ -3,11 +3,14 @@ from models import db, Release, Artist, Format
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import re
 import json
 import unicodedata
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://localhost/basement_stacks')
+db_url = os.environ.get('DATABASE_URL', 'postgresql://localhost/basement_stacks')
+db_url = re.sub(r'^postgres://', 'postgresql://', db_url)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
