@@ -14,3 +14,6 @@ SQLAlchemy==2.0.46
 typing_extensions==4.15.0
 urllib3==2.6.3
 Werkzeug==3.1.6
+psycopg2-binary==2.9.10
+Flask-Migrate==4.1.0
+gunicorn==23.0.0
