@@ -232,13 +232,24 @@ document.querySelectorAll('.format-option').forEach(option => {
             
             if (isLetterNavActive()) {
                 letterNav.style.display = 'flex';
-                const startLetter = substantialLetters.includes(letterOrder[currentLetterIndex]) 
-                    ? letterOrder[currentLetterIndex] 
-                    : substantialLetters[0];
-                currentLetterIndex = letterOrder.indexOf(startLetter);
-                buildLetterNav();
-                showLetter(currentLetterIndex);
-                updateEdgeTabs();
+                fetch(`/api/releases/by-letter?format=${activeFormat}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        allGrouped = data.grouped;
+                        substantialLetters = data.substantial;
+                        letterOrder = Object.keys(allGrouped).sort((a, b) => {
+                            if (a === '#') return -1;
+                            if (b === '#') return 1;
+                            return a.localeCompare(b);
+                        });
+                        const startLetter = substantialLetters.includes(letterOrder[currentLetterIndex])
+                            ? letterOrder[currentLetterIndex]
+                            : substantialLetters[0];
+                        currentLetterIndex = letterOrder.indexOf(startLetter);
+                        buildLetterNav();
+                        showLetter(currentLetterIndex);
+                        updateEdgeTabs();
+                    });
             } else {
                 letterNav.style.display = 'none';
                 document.getElementById('collection').innerHTML = '';
