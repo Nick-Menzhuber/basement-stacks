@@ -155,7 +155,7 @@ document.querySelectorAll('.scope-pill').forEach(pill => {
 });
 
 function getFormatIcon(format) {
-    if (format === 'CD') return '/static/icons/cd.png';
+    if (format === 'CD') return '/static/icons/CD.png';
     if(format === 'Cassette') return '/static/icons/cassette.png';
     return '/static/icons/vinyl.png';
 }
