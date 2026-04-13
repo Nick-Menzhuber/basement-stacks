@@ -233,7 +233,13 @@ def sync_collection():
         page += 1
 
     print("Syncing artist data...")
-    artists = Artist.query.filter(Artist.discogs_artist_id.isnot(None)).all()
+    artist = Artist(
+    name=artist_name,
+    sort_name=clean_artist_name(basic['artists'][0]['name']),
+    discogs_artist_id=str(basic['artists'][0]['id']),
+    search_name=normalize_search(artist_name),
+    hidden=False
+)
     for i, artist in enumerate(artists):
         print(f"Syncing artist {i+1} of {len(artists)}: {artist.name}")
         sync_artist(artist)
