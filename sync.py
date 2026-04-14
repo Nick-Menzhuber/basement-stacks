@@ -156,7 +156,8 @@ def sync_item(item):
             name=artist_name,
             sort_name=clean_artist_name(basic['artists'][0]['name']),
             discogs_artist_id=str(basic['artists'][0]['id']),
-            search_name=normalize_search(artist_name)
+            search_name=normalize_search(artist_name),
+            hidden=False
         )
         db.session.add(artist)
         db.session.flush()
@@ -233,13 +234,7 @@ def sync_collection():
         page += 1
 
     print("Syncing artist data...")
-    artist = Artist(
-    name=artist_name,
-    sort_name=clean_artist_name(basic['artists'][0]['name']),
-    discogs_artist_id=str(basic['artists'][0]['id']),
-    search_name=normalize_search(artist_name),
-    hidden=False
-)
+
     for i, artist in enumerate(artists):
         print(f"Syncing artist {i+1} of {len(artists)}: {artist.name}")
         sync_artist(artist)
