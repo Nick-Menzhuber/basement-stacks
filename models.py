@@ -18,6 +18,9 @@ class Artist(db.Model):
     videos = db.Column(db.Text, nullable=True)
     birthday = db.Column(db.Date)
     hidden = db.Column(db.Boolean, nullable=True)
+    primary_artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=True)
+    
+    primary_artist = db.relationship('Artist', remote_side=[id], backref=db.backref('aliases', lazy=True))
 
 class Membership(db.Model):
     __tablename__ = 'memberships'
@@ -65,3 +68,13 @@ class Format(db.Model):
     discogs_release_id = db.Column(db.String(50), nullable=True)
 
     release = db.relationship('Release', backref=db.backref('formats', lazy=True))
+
+class ArtistAppearance(db.Model):
+    __tablename__ = 'artist_appearances'
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
+    release_id = db.Column(db.Integer, db.ForeignKey('releases.id'), nullable=False)
+
+    artist = db.relationship('Artist', backref=db.backref('appearances', lazy=True))
+    release = db.relationship('Release', backref=db.backref('appearing_artists', lazy=True))

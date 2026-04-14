@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request, json
-from models import db, Release, Artist, Format
+from models import db, Release, Artist, Format, ArtistAppearance
 from dotenv import load_dotenv
 load_dotenv()
 import os
