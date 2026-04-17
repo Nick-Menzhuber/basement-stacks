@@ -234,7 +234,9 @@ def sync_collection():
         page += 1
 
     print("Syncing artist data...")
-
+    artists = Artist.query.join(Release).filter(
+        Artist.discogs_artist_id.isnot(None)
+    ).distinct().all()
     for i, artist in enumerate(artists):
         print(f"Syncing artist {i+1} of {len(artists)}: {artist.name}")
         sync_artist(artist)
