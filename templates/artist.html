@@ -22,7 +22,7 @@
             {% endif %}
             <div id="artist-info">
                 <h1>{{ artist.name }}</h1>
-                <p class="artist-count">{{ releases|length }} album{{ 's' if releases|length != 1 else '' }} in the stacks</p>
+                <p class="artist-count">{{ releases|length }} release{{ 's' if releases|length != 1 else '' }} in the stacks</p>
                 {% if artist.custom_profile or artist.profile %}
                 <p class="artist-profile">{{ artist.custom_profile or artist.profile }}</p>
                 {% endif %}
