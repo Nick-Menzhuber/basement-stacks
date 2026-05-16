@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request, json
-from models import db, Release, Artist, Format, ArtistAppearance
+from models import db, Release, Artist, Format, ArtistAppearance, Membership
 from dotenv import load_dotenv
 load_dotenv()
 import os
@@ -164,8 +164,26 @@ def release_detail(id):
 @app.route('/artist/<int:id>')
 def artist_detail(id):
     artist = db.get_or_404(Artist, id)
-    releases = Release.query.filter_by(artist_id=artist.id).order_by(Release.release_year, Release.sort_order).all()
-    return render_template('artist.html', artist=artist, releases=releases)
+    
+    artist_ids = [artist.id] + [a.id for a in artist.aliases]
+    
+    releases = Release.query.filter(
+        Release.artist_id.in_(artist_ids)
+    ).order_by(Release.release_year, Release.sort_order).all()
+    
+    appearances = ArtistAppearance.query.filter_by(artist_id=artist.id).all()
+    appearance_releases = [a.release for a in appearances]
+    
+    # Groups this artist is a member of, that have releases in the collection
+    member_groups = Artist.query.join(
+        Membership, Membership.group_id == Artist.id
+    ).join(
+        Release, Release.artist_id == Artist.id
+    ).filter(
+        Membership.artist_id == artist.id
+    ).distinct().all()
+    
+    return render_template('artist.html', artist=artist, releases=releases, appearance_releases=appearance_releases, member_groups=member_groups)
 
 @app.route('/release/<int:id>/<format_slug>')
 def release_detail_format(id, format_slug):
@@ -207,9 +225,39 @@ def api_releases_count():
     total_pages = (total + per_page - 1) // per_page
     return jsonify({'total_pages': total_pages})
 
+@app.route('/api/releases/letters')
+def api_releases_letters():
+    format_filter = request.args.get('format', 'all')
+    
+    query = Release.query.join(Artist).filter(
+        Release.hidden == False,
+        Artist.hidden == False
+    ).with_entities(Artist.sort_name)
+    
+    if format_filter != 'all':
+        query = query.join(Format).filter(Format.format_name == format_filter)
+    
+    results = query.all()
+    
+    letter_counts = {}
+    for r in results:
+        sort_name = r.sort_name or ''
+        first_char = sort_name[0].upper() if sort_name else '#'
+        letter = '#' if first_char.isdigit() else first_char
+        letter_counts[letter] = letter_counts.get(letter, 0) + 1
+    
+    letter_list = sorted(letter_counts.keys(), key=lambda x: (x != '#', x))
+    substantial = [k for k, v in letter_counts.items() if v >= 30]
+    
+    return jsonify({
+        'letters': letter_list,
+        'substantial': substantial
+    })
+
 @app.route('/api/releases/by-letter')
 def api_releases_by_letter():
     format_filter = request.args.get('format', 'all')
+    letter = request.args.get('letter', None)
     
     query = Release.query.join(Artist).filter(
         Release.hidden == False,
@@ -221,43 +269,33 @@ def api_releases_by_letter():
     
     query = query.order_by(Artist.sort_name, Release.release_year, Release.sort_order)
     
+    if letter:
+        if letter == '#':
+            query = query.filter(
+                db.func.left(Artist.sort_name, 1).in_(
+                    [str(i) for i in range(10)]
+                )
+            )
+        else:
+            query = query.filter(
+                db.func.upper(db.func.left(Artist.sort_name, 1)) == letter
+            )
+    
     releases = query.all()
     
-    # Group by letter
-    grouped = {}
-    for r in releases:
-        sort_name = r.artist.sort_name or r.artist.name
-        first_char = sort_name[0].upper()
-        letter = '#' if first_char.isdigit() else first_char
-        if letter not in grouped:
-            grouped[letter] = []
-        grouped[letter].append({
-            'id': r.id,
-            'title': r.title,
-            'short_title': r.short_title,
-            'artist_id': r.artist.id,
-            'artist': r.artist.name,
-            'sort_name': r.artist.sort_name,
-            'cover_image_url': r.cover_image_url,
-            'release_year': r.release_year,
-            'formats': [f.format_name for f in r.formats]
-        })
-
-        if '#' in grouped:
-            def numeric_sort_key(r):
-                try:
-                    return int(''.join(filter(str.isdigit, r['sort_name'].split()[0])))
-                except:
-                    return 0
-            grouped['#'] = sorted(grouped['#'], key=numeric_sort_key)
+    data = [{
+        'id': r.id,
+        'title': r.title,
+        'short_title': r.short_title,
+        'artist_id': r.artist.id,
+        'artist': r.artist.name,
+        'sort_name': r.artist.sort_name,
+        'cover_image_url': r.cover_image_url,
+        'release_year': r.release_year,
+        'formats': [f.format_name for f in r.formats]
+    } for r in releases]
     
-    # Determine substantial letters (30+ releases)
-    substantial = [k for k, v in grouped.items() if len(v) >= 30]
-    
-    return jsonify({
-        'grouped': grouped,
-        'substantial': substantial
-    })
+    return jsonify({'releases': data})
 
 if __name__ == '__main__':
     app.run(debug=True)

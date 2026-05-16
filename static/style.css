@@ -630,3 +630,55 @@ body {
 .artist-url:hover {
     text-decoration: underline;
 }
+#artist-appearances {
+    margin-top: 40px;
+}
+
+#artist-appearances h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #aaaaaa;
+    margin: 0 0 15px 0;
+}
+
+#appearance-shelf {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    cursor: grab;
+}
+
+#appearance-shelf:active {
+    cursor: grabbing;
+}
+#artist-memberships {
+    margin-top: 40px;
+}
+
+#artist-memberships h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #aaaaaa;
+    margin: 0 0 15px 0;
+}
+
+#membership-shelf {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    cursor: grab;
+}
+
+#membership-shelf:active {
+    cursor: grabbing;
+}
+
+.no-image {
+    width: 150px;
+    height: 150px;
+    background: #2a2a2a;
+}

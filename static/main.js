@@ -3,26 +3,18 @@ let loading = false;
 let page = 1;
 let searchScope = 'albums';
 let currentLetter = 'null';
-let allGrouped = {};
 let letterOrder = [];
 let currentLetterIndex = 0;
 let substantialLetters = [];
 let hasNext = true;
 
 async function init() {
-    const res = await fetch('/api/releases/by-letter')
+    const res = await fetch('/api/releases/letters');
     const data = await res.json();
-    allGrouped = data.grouped;
     substantialLetters = data.substantial;
 
-    //Build letter order: # first, then A-Z
-    letterOrder = Object.keys(allGrouped).sort((a, b) => {
-        if (a === '#') return -1;
-        if (b === '#') return 1;
-        return a.localeCompare(b);
-    });
+    letterOrder = data.letters;
 
-    //Pick random substantial letter
     const startLetter = substantialLetters[Math.floor(Math.random() * substantialLetters.length)];
     currentLetterIndex = letterOrder.indexOf(startLetter);
 
@@ -45,15 +37,21 @@ function buildLetterNav() {
     });
 }
 
-function showLetter(index) {
+async function showLetter(index) {
     currentLetterIndex = index;
     const letter = letterOrder[index];
     const collection = document.getElementById('collection');
     collection.innerHTML = '';
-    const releases = allGrouped[letter] || [];
-    releases.forEach(release => appendRelease(release));
     
-    // Update active tab
+    document.getElementById('loading').style.display = 'block';
+    
+    const res = await fetch(`/api/releases/by-letter?letter=${encodeURIComponent(letter)}&format=${activeFormat}`);
+    const data = await res.json();
+    
+    document.getElementById('loading').style.display = 'none';
+    
+    data.releases.forEach(release => appendRelease(release));
+    
     document.querySelectorAll('.letter-tab').forEach(tab => {
         tab.classList.toggle('active', parseInt(tab.dataset.index) === index);
     });
@@ -232,23 +230,13 @@ document.querySelectorAll('.format-option').forEach(option => {
             
             if (isLetterNavActive()) {
                 letterNav.style.display = 'flex';
-                fetch(`/api/releases/by-letter?format=${activeFormat}`)
+                fetch(`/api/releases/letters?format=${activeFormat}`)
                     .then(res => res.json())
                     .then(data => {
-                        allGrouped = data.grouped;
                         substantialLetters = data.substantial;
-                        letterOrder = Object.keys(allGrouped).sort((a, b) => {
-                            if (a === '#') return -1;
-                            if (b === '#') return 1;
-                            return a.localeCompare(b);
-                        });
-                        const startLetter = substantialLetters.includes(letterOrder[currentLetterIndex])
-                            ? letterOrder[currentLetterIndex]
-                            : substantialLetters[0];
-                        currentLetterIndex = letterOrder.indexOf(startLetter);
+                        letterOrder = data.letters;
                         buildLetterNav();
                         showLetter(currentLetterIndex);
-                        updateEdgeTabs();
                     });
             } else {
                 letterNav.style.display = 'none';

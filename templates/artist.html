@@ -56,6 +56,53 @@
             </a>
             {% endfor %}
         </div>
+        {% if appearance_releases %}
+<div id="artist-appearances">
+    <h3>Also Appears On</h3>
+    <div id="appearance-shelf">
+        {% for release in appearance_releases %}
+        <a href="/release/{{ release.id }}" class="shelf-item">
+            <div class="cover-wrapper">
+                <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
+                <div class="format-icons">
+                    {% for format in release.formats %}
+                        {% if format.format_name == 'CD' %}
+                            <img src="/static/icons/CD.png" class="format-icon" title="CD">
+                        {% elif format.format_name == 'Cassette' %}
+                            <img src="/static/icons/cassette.png" class="format-icon" title="Cassette">
+                        {% elif format.format_name in ['Vinyl', '7"'] %}
+                            <img src="/static/icons/vinyl.png" class="format-icon" title="Vinyl">
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <p class="shelf-title">{{ release.title }}</p>
+            <p class="shelf-year">{{ release.artist.name }} · {{ release.release_year or '' }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if member_groups %}
+<div id="artist-memberships">
+    <h3>Member of</h3>
+    <div id="membership-shelf">
+        {% for group in member_groups %}
+        <a href="/artist/{{ group.id }}" class="shelf-item">
+            <div class="cover-wrapper">
+                {% if group.image_url %}
+                <img src="{{ group.image_url }}" alt="{{ group.name }}">
+                {% else %}
+                <div class="no-image"></div>
+                {% endif %}
+            </div>
+            <p class="shelf-title">{{ group.name }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
     </div>
 </body>
 </html>
