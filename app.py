@@ -291,6 +291,7 @@ def api_releases_by_letter():
         'artist': r.artist.name,
         'sort_name': r.artist.sort_name,
         'cover_image_url': r.cover_image_url,
+        'custom_cover_image_url': r.custom_cover_image_url,
         'release_year': r.release_year,
         'formats': [f.format_name for f in r.formats]
     } for r in releases]
