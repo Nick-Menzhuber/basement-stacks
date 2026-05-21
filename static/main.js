@@ -262,7 +262,7 @@ function appendRelease(release) {
     }).join('');
     div.innerHTML = `
         <div class="cover-wrapper">
-            <img src="${release.cover_image_url}" alt="${displayTitle}">
+            <img src="${release.custom_cover_image_url || release.cover_image_url}" alt="${displayTitle}">
             <div class="format-icons">${icons}</div>
         </div>
         <h2>${displayTitle}</h2>

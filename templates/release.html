@@ -17,7 +17,7 @@
 
     <div id="detail">
         <div id="detail-art">
-            <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
+            <img src="{{ release.custom_cover_image_url or release.cover_image_url }}" alt="{{ release.title }}">
             <p class="available-on">Available on: 
                 {% for format in release.formats %}
                     {% if format.format_name == 'Vinyl' %}
