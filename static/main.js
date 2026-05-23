@@ -306,11 +306,19 @@ function runSearch(query) {
             data.releases.forEach(release => appendRelease(release));
         });
 }
+function fillViewportIfNeeded() {
+    if (document.body.offsetHeight <= window.innerHeight) {
+        if (!isLetterNavActive() && !isSearching) {
+            loadReleases();
+        }
+    }
+}
 
 window.addEventListener('scroll', () => {
     if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
         if (!isLetterNavActive() && !isSearching) {
             loadReleases();
+            fillViewportIfNeeded();
         }
     }
 });
