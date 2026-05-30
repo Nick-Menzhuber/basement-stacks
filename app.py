@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify, request, json
+from sqlalchemy import case
 from models import db, Release, Artist, Format, ArtistAppearance, Membership
 from dotenv import load_dotenv
 load_dotenv()
@@ -52,7 +53,11 @@ def api_releases():
         query = query.join(Format).filter(Format.format_name == format_filter)
 
     if sort == 'az':
-        query = query.order_by(Artist.sort_name, Release.release_year, Release.sort_order)
+        sort_key = case(
+            (Artist.is_various_artists == True, db.func.coalesce(Release.sort_title, Release.title)),
+            else_=Artist.sort_name
+        )
+        query = query.order_by(sort_key, Release.release_year, Release.sort_order)
     else:
         query = query.order_by(db.func.random())
 
@@ -66,6 +71,7 @@ def api_releases():
         'artist': r.artist.name,
         'sort_name': r.artist.sort_name,
         'cover_image_url': r.cover_image_url,
+        'custom_cover_image_url': r.custom_cover_image_url,
         'release_year': r.release_year,
         'formats': [f.format_name for f in r.formats]
     } for r in releases.items]
@@ -86,10 +92,11 @@ def api_search():
         return jsonify({'releases': []})
 
     if scope == 'years':
+        q = Release.query.join(Artist)
+        if format_filter != 'all':
+            q = q.join(Format).filter(Format.format_name == format_filter)
+    
         if query.isdigit() and len(query) == 4:
-            q = Release.query.join(Artist)
-            if format_filter != 'all':
-                q = q.join(Format).filter(Format.format_name == format_filter)
             releases = q.filter(
                 Release.release_year == int(query)
             ).order_by(db.func.random()).all()
@@ -99,8 +106,6 @@ def api_search():
                 decade_start = int('19' + decade_str)
             else:
                 decade_start = int(decade_str)
-                if format_filter != 'all':
-                    q = q.join(Format).filter(Format.format_name == format_filter)
             releases = q.filter(
                 Release.release_year >= decade_start,
                 Release.release_year < decade_start + 10
@@ -137,7 +142,13 @@ def api_search():
         )
         if format_filter != 'all':
             q = q.join(Format).filter(Format.format_name == format_filter)
-        releases = q.order_by(Artist.sort_name, Release.release_year, Release.sort_order).all()
+        releases = q.order_by(
+            case(
+                (Artist.is_various_artists == True, db.func.coalesce(Release.sort_title, Release.title)),
+                else_=Artist.sort_name
+            ),
+            Release.release_year, Release.sort_order
+        ).all()
 
     data = [{
         'id': r.id,
@@ -146,6 +157,7 @@ def api_search():
         'artist_id': r.artist.id,
         'artist': r.artist.name,
         'cover_image_url': r.cover_image_url,
+        'custom_cover_image_url': r.custom_cover_image_url,
         'release_year': r.release_year,
         'formats': [f.format_name for f in r.formats]
     } for r in releases]
@@ -232,16 +244,24 @@ def api_releases_letters():
     query = Release.query.join(Artist).filter(
         Release.hidden == False,
         Artist.hidden == False
-    ).with_entities(Artist.sort_name)
+    )
     
     if format_filter != 'all':
         query = query.join(Format).filter(Format.format_name == format_filter)
     
-    results = query.all()
-    
+    results = query.with_entities(
+        Artist.sort_name,
+        Artist.is_various_artists,
+        Release.sort_title,
+        Release.title
+    ).all()
+
     letter_counts = {}
     for r in results:
-        sort_name = r.sort_name or ''
+        if r.is_various_artists:
+            sort_name = r.sort_title or r.title or ''
+        else:
+            sort_name = r.sort_name or ''
         first_char = sort_name[0].upper() if sort_name else '#'
         letter = '#' if first_char.isdigit() else first_char
         letter_counts[letter] = letter_counts.get(letter, 0) + 1
@@ -258,29 +278,34 @@ def api_releases_letters():
 def api_releases_by_letter():
     format_filter = request.args.get('format', 'all')
     letter = request.args.get('letter', None)
-    
+
+    sort_key = case(
+        (Artist.is_various_artists == True, db.func.coalesce(Release.sort_title, Release.title)),
+        else_=Artist.sort_name
+    )
+
     query = Release.query.join(Artist).filter(
         Release.hidden == False,
         Artist.hidden == False
     )
-    
+
     if format_filter != 'all':
         query = query.join(Format).filter(Format.format_name == format_filter)
-    
-    query = query.order_by(Artist.sort_name, Release.release_year, Release.sort_order)
-    
+
+    query = query.order_by(sort_key, Release.release_year, Release.sort_order)
+
     if letter:
         if letter == '#':
             query = query.filter(
-                db.func.left(Artist.sort_name, 1).in_(
+                db.func.left(sort_key, 1).in_(
                     [str(i) for i in range(10)]
                 )
             )
         else:
             query = query.filter(
-                db.func.upper(db.func.left(Artist.sort_name, 1)) == letter
+                db.func.upper(db.func.left(sort_key, 1)) == letter
             )
-    
+        
     releases = query.all()
     
     data = [{

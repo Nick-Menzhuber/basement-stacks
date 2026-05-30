@@ -39,6 +39,7 @@ class Release(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(500), nullable=False)
     short_title = db.Column(db.String(200), nullable=True)
+    sort_title = db.Column(db.String(200), nullable=True)
     artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
     release_year = db.Column(db.Integer, nullable=True)
     release_date = db.Column(db.Date, nullable=True)
