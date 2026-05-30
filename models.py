@@ -19,6 +19,7 @@ class Artist(db.Model):
     birthday = db.Column(db.Date)
     hidden = db.Column(db.Boolean, nullable=True)
     primary_artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=True)
+    display_name = db.Column(db.String(200), nullable=True)
     
     primary_artist = db.relationship('Artist', remote_side=[id], backref=db.backref('aliases', lazy=True))
 
@@ -55,6 +56,7 @@ class Release(db.Model):
     date_added = db.Column(db.DateTime)
     notes = db.Column(db.Text)
     hidden = db.Column(db.Boolean, default=False)
+    format_override = db.Column(db.String(50), nullable=True)
 
 
     artist = db.relationship('Artist', backref=db.backref('releases', lazy=True))
