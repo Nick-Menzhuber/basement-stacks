@@ -1,0 +1,182 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<h2 style="margin-top: 0;">Releases</h2>
+
+<div class="search-bar">
+    <input type="text" id="search-input" placeholder="Search by title or artist..." autofocus>
+</div>
+
+<ul class="result-list" id="results"></ul>
+
+<div id="editor" style="display:none; margin-top: 2rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+        <div>
+            <h3 id="editor-title" style="margin: 0 0 0.25rem 0;"></h3>
+            <div id="editor-meta" style="font-size: 0.85rem; color: #888;"></div>
+        </div>
+        <img id="editor-art" src="" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <label>
+            <div class="field-label">Short Title</div>
+            <input type="text" id="f-short_title">
+        </label>
+        <label>
+            <div class="field-label">Sort Title</div>
+            <input type="text" id="f-sort_title">
+        </label>
+        <label>
+            <div class="field-label">Format Override</div>
+            <select id="f-format_override">
+                <option value="">— none —</option>
+                <option value="Vinyl">Vinyl</option>
+                <option value="CD">CD</option>
+                <option value="Cassette">Cassette</option>
+                <option value="7&quot;">7"</option>
+            </select>
+        </label>
+        <label>
+            <div class="field-label">Mood</div>
+            <input type="text" id="f-mood">
+        </label>
+        <label>
+            <div class="field-label">Sort Order</div>
+            <input type="number" id="f-sort_order">
+        </label>
+        <label>
+            <div class="field-label">Custom Cover Art URL</div>
+            <input type="text" id="f-custom_cover_image_url">
+        </label>
+        <label style="grid-column: 1 / -1;">
+            <div class="field-label">Notes</div>
+            <textarea id="f-notes" rows="3"></textarea>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="f-hidden">
+            <span>Hidden</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="f-is_customized">
+            <span>Marked as reviewed</span>
+        </label>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+        <button onclick="saveRelease()" style="padding: 0.6rem 1.2rem; background: #4a7c59; color: #eee; border: none; border-radius: 4px; cursor: pointer;">Save</button>
+        <button onclick="closeEditor()" style="padding: 0.6rem 1.2rem; background: #444; color: #eee; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+        <span id="save-status" style="line-height: 2.2; font-size: 0.85rem; color: #888;"></span>
+    </div>
+</div>
+
+<style>
+    .field-label { font-size: 0.75rem; color: #888; margin-bottom: 0.3rem; }
+    input[type="text"], input[type="number"], select, textarea {
+        width: 100%;
+        padding: 0.5rem;
+        background: #222;
+        border: 1px solid #444;
+        color: #eee;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-family: sans-serif;
+    }
+    textarea { resize: vertical; }
+</style>
+
+<script>
+    let currentRelease = null;
+    let searchTimer = null;
+    const params = new URLSearchParams(window.location.search);
+    const preloadId = params.get('id');
+    if (preloadId) {
+        fetch(`/admin/api/search/releases?id=${preloadId}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.length > 0) openEditor(data[0]);
+            });
+    }
+
+    document.getElementById('search-input').addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => search(this.value), 300);
+    });
+
+    function search(q) {
+        if (q.length < 2) {
+            document.getElementById('results').innerHTML = '';
+            return;
+        }
+        fetch(`/admin/api/search/releases?q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('results');
+                list.innerHTML = '';
+                data.forEach(release => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div>${release.short_title || release.title}</div>
+                        <div class="meta">${release.artist} · ${release.release_year || '—'} · ${release.formats.join(', ')}${release.is_customized ? ' · ✓' : ''}</div>
+                    `;
+                    li.addEventListener('click', () => openEditor(release));
+                    list.appendChild(li);
+                });
+            });
+    }
+
+    function openEditor(release) {
+        currentRelease = release;
+        document.getElementById('editor-title').textContent = release.title;
+        document.getElementById('editor-meta').textContent = `${release.artist} · ${release.release_year || '—'}`;
+        document.getElementById('editor-art').src = release.custom_cover_image_url || release.cover_image_url || '';
+
+        document.getElementById('f-short_title').value = release.short_title || '';
+        document.getElementById('f-sort_title').value = release.sort_title || '';
+        document.getElementById('f-format_override').value = release.format_override || '';
+        document.getElementById('f-mood').value = release.mood || '';
+        document.getElementById('f-sort_order').value = release.sort_order || '';
+        document.getElementById('f-custom_cover_image_url').value = release.custom_cover_image_url || '';
+        document.getElementById('f-notes').value = release.notes || '';
+        document.getElementById('f-hidden').checked = release.hidden || false;
+        document.getElementById('f-is_customized').checked = release.is_customized || false;
+
+        document.getElementById('editor').style.display = 'block';
+        document.getElementById('save-status').textContent = '';
+        document.getElementById('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeEditor() {
+        document.getElementById('editor').style.display = 'none';
+        currentRelease = null;
+    }
+
+    function saveRelease() {
+        if (!currentRelease) return;
+        const payload = {
+            short_title: document.getElementById('f-short_title').value || null,
+            sort_title: document.getElementById('f-sort_title').value || null,
+            format_override: document.getElementById('f-format_override').value || null,
+            mood: document.getElementById('f-mood').value || null,
+            sort_order: document.getElementById('f-sort_order').value ? parseInt(document.getElementById('f-sort_order').value) : null,
+            custom_cover_image_url: document.getElementById('f-custom_cover_image_url').value || null,
+            notes: document.getElementById('f-notes').value || null,
+            hidden: document.getElementById('f-hidden').checked,
+            is_customized: document.getElementById('f-is_customized').checked
+        };
+
+        fetch(`/admin/api/releases/${currentRelease.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('save-status').textContent = 'Saved.';
+                Object.assign(currentRelease, payload);
+            }
+        });
+    }
+</script>
+{% endblock %}

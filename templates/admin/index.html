@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<h2 style="margin-top: 0;">What are we editing?</h2>
+<div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+    <a href="/admin/releases" style="flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1.5rem; text-decoration: none; color: #eee;">
+        <div style="font-size: 1.1rem; margin-bottom: 0.4rem;">Releases</div>
+        <div style="font-size: 0.85rem; color: #888;">Edit metadata, format overrides, mood, notes</div>
+    </a>
+    <a href="/admin/artists" style="flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1.5rem; text-decoration: none; color: #eee;">
+        <div style="font-size: 1.1rem; margin-bottom: 0.4rem;">Artists</div>
+        <div style="font-size: 0.85rem; color: #888;">Edit sort name, display name, profile, aliases</div>
+    </a>
+    <a href="/admin/queue" style="flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1.5rem; text-decoration: none; color: #eee;">
+        <div style="font-size: 1.1rem; margin-bottom: 0.4rem;">Review Queue</div>
+        <div style="font-size: 0.85rem; color: #888;">New additions that need attention</div>
+    </a>
+</div>
+{% endblock %}

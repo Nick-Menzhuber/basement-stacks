@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<h2 style="margin-top: 0;">Review Queue</h2>
+
+{% if releases %}
+<p style="color: #888; font-size: 0.9rem; margin-bottom: 1.5rem;">{{ total }} release{{ 's' if total != 1 }} awaiting review — showing 50 most recent.</p>
+
+<ul class="result-list">
+    {% for r in releases %}
+    <li onclick="window.location.href='/admin/releases?id={{ r.id }}'" style="cursor: pointer;">
+        <div>{{ r.short_title or r.title }}</div>
+        <div class="meta">
+            {{ r.artist.display_name or r.artist.name }}
+            {% if r.release_year %} · {{ r.release_year }}{% endif %}
+            {% if r.date_added %} · Added {{ r.date_added.strftime('%b %d, %Y') }}{% endif %}
+            · {{ r.formats|map(attribute='format_name')|join(', ') }}
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+
+{% else %}
+<p style="color: #888;">Queue is empty — you're all caught up.</p>
+{% endif %}
+
+{% endblock %}

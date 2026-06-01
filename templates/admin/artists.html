@@ -1,0 +1,165 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<h2 style="margin-top: 0;">Artists</h2>
+
+<div class="search-bar">
+    <input type="text" id="search-input" placeholder="Search by name..." autofocus>
+</div>
+
+<ul class="result-list" id="results"></ul>
+
+<div id="editor" style="display:none; margin-top: 2rem; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+        <div>
+            <h3 id="editor-name" style="margin: 0 0 0.25rem 0;"></h3>
+            <div id="editor-meta" style="font-size: 0.85rem; color: #888;"></div>
+        </div>
+        <img id="editor-art" src="" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;">
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <label>
+            <div class="field-label">Display Name</div>
+            <input type="text" id="f-display_name">
+        </label>
+        <label>
+            <div class="field-label">Sort Name</div>
+            <input type="text" id="f-sort_name">
+        </label>
+        <label>
+            <div class="field-label">Birthday</div>
+            <input type="date" id="f-birthday">
+        </label>
+        <label>
+            <div class="field-label">Image URL</div>
+            <input type="text" id="f-image_url">
+        </label>
+        <label style="grid-column: 1 / -1;">
+            <div class="field-label">Custom Profile</div>
+            <textarea id="f-custom_profile" rows="4"></textarea>
+        </label>
+        <label>
+            <div class="field-label">Primary Artist ID</div>
+            <input type="number" id="f-primary_artist_id">
+            <div id="primary-artist-name" style="font-size: 0.75rem; color: #888; margin-top: 0.3rem;"></div>
+        </label>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; justify-content: center;">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" id="f-hidden">
+                <span>Hidden</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" id="f-is_various_artists">
+                <span>Various Artists</span>
+            </label>
+        </div>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+        <button onclick="saveArtist()" style="padding: 0.6rem 1.2rem; background: #4a7c59; color: #eee; border: none; border-radius: 4px; cursor: pointer;">Save</button>
+        <button onclick="closeEditor()" style="padding: 0.6rem 1.2rem; background: #444; color: #eee; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+        <span id="save-status" style="line-height: 2.2; font-size: 0.85rem; color: #888;"></span>
+    </div>
+</div>
+
+<style>
+    .field-label { font-size: 0.75rem; color: #888; margin-bottom: 0.3rem; }
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+        width: 100%;
+        padding: 0.5rem;
+        background: #222;
+        border: 1px solid #444;
+        color: #eee;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-family: sans-serif;
+    }
+    textarea { resize: vertical; }
+</style>
+
+<script>
+    let currentArtist = null;
+    let searchTimer = null;
+
+    document.getElementById('search-input').addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => search(this.value), 300);
+    });
+
+    function search(q) {
+        if (q.length < 2) {
+            document.getElementById('results').innerHTML = '';
+            return;
+        }
+        fetch(`/admin/api/search/artists?q=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(data => {
+                const list = document.getElementById('results');
+                list.innerHTML = '';
+                data.forEach(artist => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div>${artist.display_name || artist.name}</div>
+                        <div class="meta">${artist.sort_name}${artist.primary_artist_name ? ' · alias of ' + artist.primary_artist_name : ''}${artist.is_various_artists ? ' · Various Artists' : ''}</div>
+                    `;
+                    li.addEventListener('click', () => openEditor(artist));
+                    list.appendChild(li);
+                });
+            });
+    }
+
+    function openEditor(artist) {
+        currentArtist = artist;
+        document.getElementById('editor-name').textContent = artist.name;
+        document.getElementById('editor-meta').textContent = artist.sort_name;
+        document.getElementById('editor-art').src = artist.image_url || '';
+
+        document.getElementById('f-display_name').value = artist.display_name || '';
+        document.getElementById('f-sort_name').value = artist.sort_name || '';
+        document.getElementById('f-birthday').value = artist.birthday || '';
+        document.getElementById('f-image_url').value = artist.image_url || '';
+        document.getElementById('f-custom_profile').value = artist.custom_profile || '';
+        document.getElementById('f-primary_artist_id').value = artist.primary_artist_id || '';
+        document.getElementById('primary-artist-name').textContent = artist.primary_artist_name ? `→ ${artist.primary_artist_name}` : '';
+        document.getElementById('f-hidden').checked = artist.hidden || false;
+        document.getElementById('f-is_various_artists').checked = artist.is_various_artists || false;
+
+        document.getElementById('editor').style.display = 'block';
+        document.getElementById('save-status').textContent = '';
+        document.getElementById('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeEditor() {
+        document.getElementById('editor').style.display = 'none';
+        currentArtist = null;
+    }
+
+    function saveArtist() {
+        if (!currentArtist) return;
+        const payload = {
+            display_name: document.getElementById('f-display_name').value || null,
+            sort_name: document.getElementById('f-sort_name').value || null,
+            birthday: document.getElementById('f-birthday').value || null,
+            image_url: document.getElementById('f-image_url').value || null,
+            custom_profile: document.getElementById('f-custom_profile').value || null,
+            primary_artist_id: document.getElementById('f-primary_artist_id').value ? parseInt(document.getElementById('f-primary_artist_id').value) : null,
+            hidden: document.getElementById('f-hidden').checked,
+            is_various_artists: document.getElementById('f-is_various_artists').checked
+        };
+
+        fetch(`/admin/api/artists/${currentArtist.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('save-status').textContent = 'Saved.';
+                Object.assign(currentArtist, payload);
+            }
+        });
+    }
+</script>
+{% endblock %}

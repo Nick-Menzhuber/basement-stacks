@@ -9,6 +9,7 @@ import json
 import unicodedata
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-in-prod')
 db_url = os.environ.get('DATABASE_URL', 'postgresql://localhost/basement_stacks')
 db_url = re.sub(r'^postgres://', 'postgresql://', db_url)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
@@ -21,6 +22,9 @@ migrate = Migrate(app, db)
 
 with app.app_context():
     db.create_all()
+
+from admin import admin_bp
+app.register_blueprint(admin_bp)
     
 
 def normalize_search(text):
