@@ -14,6 +14,7 @@
         <div>
             <h3 id="editor-title" style="margin: 0 0 0.25rem 0;"></h3>
             <div id="editor-meta" style="font-size: 0.85rem; color: #888;"></div>
+            <div id="editor-id" style="font-size: 0.75rem; color: #555; margin-top: 0.2rem;"></div>
         </div>
         <img id="editor-art" src="" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
     </div>
@@ -128,6 +129,7 @@
     function openEditor(release) {
         currentRelease = release;
         document.getElementById('editor-title').textContent = release.title;
+        document.getElementById('editor-id').textContent = `ID: ${release.id}`;
         document.getElementById('editor-meta').textContent = `${release.artist} · ${release.release_year || '—'}`;
         document.getElementById('editor-art').src = release.custom_cover_image_url || release.cover_image_url || '';
 

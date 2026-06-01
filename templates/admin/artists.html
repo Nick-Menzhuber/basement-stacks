@@ -14,6 +14,7 @@
         <div>
             <h3 id="editor-name" style="margin: 0 0 0.25rem 0;"></h3>
             <div id="editor-meta" style="font-size: 0.85rem; color: #888;"></div>
+            <div id="editor-id" style="font-size: 0.75rem; color: #555; margin-top: 0.2rem;"></div>
         </div>
         <img id="editor-art" src="" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%;">
     </div>
@@ -101,7 +102,7 @@
                     const li = document.createElement('li');
                     li.innerHTML = `
                         <div>${artist.display_name || artist.name}</div>
-                        <div class="meta">${artist.sort_name}${artist.primary_artist_name ? ' · alias of ' + artist.primary_artist_name : ''}${artist.is_various_artists ? ' · Various Artists' : ''}</div>
+                        <div class="meta">${artist.sort_name} · ID: ${artist.id}${artist.primary_artist_name ? ' · alias of ' + artist.primary_artist_name : ''}${artist.is_various_artists ? ' · Various Artists' : ''}</div>
                     `;
                     li.addEventListener('click', () => openEditor(artist));
                     list.appendChild(li);
@@ -112,6 +113,7 @@
     function openEditor(artist) {
         currentArtist = artist;
         document.getElementById('editor-name').textContent = artist.name;
+        document.getElementById('editor-id').textContent = `ID: ${artist.id}`;
         document.getElementById('editor-meta').textContent = artist.sort_name;
         document.getElementById('editor-art').src = artist.image_url || '';
 
