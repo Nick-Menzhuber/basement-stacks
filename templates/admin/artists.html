@@ -61,6 +61,7 @@
         <button onclick="saveArtist()" style="padding: 0.6rem 1.2rem; background: #4a7c59; color: #eee; border: none; border-radius: 4px; cursor: pointer;">Save</button>
         <button onclick="closeEditor()" style="padding: 0.6rem 1.2rem; background: #444; color: #eee; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
         <span id="save-status" style="line-height: 2.2; font-size: 0.85rem; color: #888;"></span>
+        <button onclick="fetchDiscogs()" style="padding: 0.6rem 1.2rem; background: #333; color: #eee; border: 1px solid #555; border-radius: 4px; cursor: pointer;">Fetch from Discogs</button>
     </div>
 </div>
 
@@ -163,5 +164,30 @@
             }
         });
     }
+
+    function fetchDiscogs() {
+    if (!currentArtist) return;
+    if (!currentArtist.discogs_artist_id) {
+        document.getElementById('save-status').textContent = 'No Discogs ID set.';
+        return;
+    }
+    document.getElementById('save-status').textContent = 'Fetching...';
+    fetch(`/admin/api/artists/${currentArtist.id}/fetch-discogs`, {
+        method: 'POST'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('save-status').textContent = 'Fetched!';
+            if (data.image_url) {
+                document.getElementById('f-image_url').value = data.image_url;
+                document.getElementById('editor-art').src = data.image_url;
+                currentArtist.image_url = data.image_url;
+            }
+        } else {
+            document.getElementById('save-status').textContent = data.error || 'Failed.';
+        }
+    });
+}
 </script>
 {% endblock %}

@@ -39,7 +39,7 @@
             {% for release in releases %}
             <a href="/release/{{ release.id }}" class="shelf-item">
                 <div class="cover-wrapper">
-                    <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
+                    <img src="{{ release.custom_cover_image_url or release.cover_image_url }}" alt="{{ release.title }}">
                     <div class="format-icons">
                         {% for format in release.formats %}
                             {% if format.format_name == 'CD' %}
@@ -64,7 +64,7 @@
         {% for release in appearance_releases %}
         <a href="/release/{{ release.id }}" class="shelf-item">
             <div class="cover-wrapper">
-                <img src="{{ release.cover_image_url }}" alt="{{ release.title }}">
+                <img src="{{ release.custom_cover_image_url or release.cover_image_url }}" alt="{{ release.title }}">
                 <div class="format-icons">
                     {% for format in release.formats %}
                         {% if format.format_name == 'CD' %}

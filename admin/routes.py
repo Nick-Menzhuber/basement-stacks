@@ -119,6 +119,7 @@ def search_artists():
         'custom_profile': a.custom_profile,
         'hidden': a.hidden or False,
         'is_various_artists': a.is_various_artists or False,
+        'discogs_artist_id': a.discogs_artist_id,
         'primary_artist_id': a.primary_artist_id,
         'primary_artist_name': a.primary_artist.name if a.primary_artist else None
     } for a in results])
@@ -153,3 +154,41 @@ def queue():
     ).order_by(Release.date_added.desc()).limit(50).all()
     
     return render_template('admin/queue.html', releases=releases, total=total)
+
+import requests as http_requests
+
+@admin_bp.route('/api/artists/<int:id>/fetch-discogs', methods=['POST'])
+@login_required
+def fetch_artist_discogs(id):
+    artist = db.get_or_404(Artist, id)
+    
+    if not artist.discogs_artist_id:
+        return jsonify({'error': 'No Discogs artist ID set'}), 400
+    
+    token = os.environ.get('DISCOGS_TOKEN')
+    headers = {
+        'Authorization': f'Discogs token={token}',
+        'User-Agent': 'BasementStacks/1.0'
+    }
+    
+    url = f'https://api.discogs.com/artists/{artist.discogs_artist_id}'
+    response = http_requests.get(url, headers=headers)
+    
+    if response.status_code != 200:
+        return jsonify({'error': f'Discogs returned {response.status_code}'}), 500
+    
+    data = response.json()
+    
+    # Only update fields that are empty
+    if not artist.image_url and data.get('images'):
+        artist.image_url = data['images'][0].get('uri')
+    if not artist.profile and data.get('profile'):
+        artist.profile = data['profile']
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'image_url': artist.image_url,
+        'profile': artist.profile
+    })
