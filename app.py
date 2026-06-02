@@ -188,7 +188,6 @@ def artist_detail(id):
     ).order_by(Release.release_year, Release.sort_order).all()
     
     appearances = ArtistAppearance.query.filter_by(artist_id=artist.id).all()
-    appearance_releases = [a.release for a in appearances]
     
     member_groups = Artist.query.join(
         Membership, Membership.group_id == Artist.id
@@ -197,6 +196,17 @@ def artist_detail(id):
     ).filter(
         Membership.artist_id == artist.id
     ).distinct().all()
+
+    # Add collaboration releases as appearances
+    collab_releases = Release.query.join(Artist).filter(
+        Release.artist_id.in_([g.id for g in member_groups]),
+        Release.hidden == False
+    ).all() if member_groups else []
+
+    appearance_releases = sorted(
+        [a.release for a in appearances] + collab_releases,
+        key=lambda r: r.release_year or 0
+    )
 
     # Collaboration members and their releases
     members = []
