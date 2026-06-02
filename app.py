@@ -190,7 +190,6 @@ def artist_detail(id):
     appearances = ArtistAppearance.query.filter_by(artist_id=artist.id).all()
     appearance_releases = [a.release for a in appearances]
     
-    # Groups this artist is a member of, that have releases in the collection
     member_groups = Artist.query.join(
         Membership, Membership.group_id == Artist.id
     ).join(
@@ -198,8 +197,24 @@ def artist_detail(id):
     ).filter(
         Membership.artist_id == artist.id
     ).distinct().all()
+
+    # Collaboration members and their releases
+    members = []
+    member_releases = []
+    if artist.members:
+        members = [m.artist for m in artist.members]
+        seen = set()
+        for member in members:
+            for r in Release.query.filter_by(artist_id=member.id).filter(Release.hidden == False).order_by(Release.release_year).all():
+                if r.id not in seen:
+                    seen.add(r.id)
+                    member_releases.append((member, r))
     
-    return render_template('artist.html', artist=artist, releases=releases, appearance_releases=appearance_releases, member_groups=member_groups)
+    return render_template('artist.html', artist=artist, releases=releases, 
+                         appearance_releases=appearance_releases, 
+                         member_groups=member_groups,
+                         members=members,
+                         member_releases=member_releases)
 
 @app.route('/release/<int:id>/<format_slug>')
 def release_detail_format(id, format_slug):

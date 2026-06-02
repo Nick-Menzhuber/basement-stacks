@@ -104,6 +104,53 @@
     </div>
 </div>
 {% endif %}
+{% if members %}
+<div id="artist-members">
+    <h3>Members</h3>
+    <div id="members-shelf">
+        {% for member in members %}
+        <a href="/artist/{{ member.id }}" class="shelf-item">
+            <div class="cover-wrapper">
+                {% if member.image_url %}
+                <img src="{{ member.image_url }}" alt="{{ member.name }}">
+                {% else %}
+                <div class="no-image"></div>
+                {% endif %}
+            </div>
+            <p class="shelf-title">{{ member.display_name or member.name }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if member_releases %}
+<div id="member-releases">
+    <h3>In the stacks from members</h3>
+    <div id="member-releases-shelf">
+        {% for member, r in member_releases %}
+        <a href="/release/{{ r.id }}" class="shelf-item">
+            <div class="cover-wrapper">
+                <img src="{{ r.custom_cover_image_url or r.cover_image_url }}" alt="{{ r.title }}">
+                <div class="format-icons">
+                    {% for format in r.formats %}
+                        {% if format.format_name == 'CD' %}
+                            <img src="/static/icons/CD.png" class="format-icon" title="CD">
+                        {% elif format.format_name == 'Cassette' %}
+                            <img src="/static/icons/cassette.png" class="format-icon" title="Cassette">
+                        {% elif format.format_name in ['Vinyl', '7"'] %}
+                            <img src="/static/icons/vinyl.png" class="format-icon" title="Vinyl">
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <p class="shelf-title">{{ r.short_title or r.title }}</p>
+            <p class="shelf-year">{{ member.display_name or member.name }} · {{ r.release_year or '' }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
     </div>
 </body>
 </html>

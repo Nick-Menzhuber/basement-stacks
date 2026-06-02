@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='vinyl-record.svg') }}" type="image/svg+xml">
+    <title>{{ release.title }} – The Basement Stacks</title>
+</head>
+
+<body>
+    <div id="detail-header">
+        <a href="/" id="back-link">← Back</a>
+    </div>
+
+    <div id="detail">
+        <div id="detail-art">
+            <img src="{{ release.custom_cover_image_url or release.cover_image_url }}" alt="{{ release.title }}">
+            <p class="available-on">Available on: 
+                {% for format in release.formats %}
+                    {% if format.format_name == 'Vinyl' %}
+                        <a href="/release/{{ release.id }}/vinyl" class="format-link">Vinyl</a>
+                    {% elif format.format_name == 'CD' %}
+                        <a href="/release/{{ release.id }}/cd" class="format-link">CD</a>
+                    {% elif format.format_name == 'Cassette' %}
+                        <a href="/release/{{ release.id }}/cassette" class="format-link">Cassette</a>
+                    {% elif format.format_name == '7"' %}
+                        <a href="/release/{{ release.id }}/7inch" class="format-link">7"</a>
+                    {% endif %}
+                    {% if not loop.last %}
+                        {% if loop.revindex == 2 %}{% if release.formats|length > 2 %}, and {% else %} and {% endif %}{% else %}, {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </p>
+        </div>
+
+        <div id="detail-info">
+            <h1>{{ release.title }}</h1>
+            <h2>
+                {% for artist in member_artists %}
+                    <a href="/artist/{{ artist.id }}" class="artist-link">{{ artist.display_name or artist.name }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </h2>
+            {% if release.release_year %}
+            <p class="detail-year">{{ release.release_year }}</p>
+            {% endif %}
+            {% if release.genre %}
+            <p class="detail-genre">{{ release.genre }}</p>
+            {% endif %}
+            {% if release.notes %}
+            <p class="detail-notes">{{ release.notes }}</p>
+            {% endif %}
+
+            <div id="tracklist-container"></div>
+        </div>
+    </div>
+
+    {% set members_with_releases = member_artists | selectattr('id', 'in', member_releases.keys() | list) | list %}
+
+
+    <script src="/static/tracklist.js"></script>
+    <script>
+        const tracks = {{ tracklist | tojson }};
+        const formats = {{ release.formats | map(attribute='format_name') | list | tojson }};
+        document.getElementById('tracklist-container').innerHTML = buildTracklistHTML(tracks, formats);
+    </script>
+</body>
+
+</html>

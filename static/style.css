@@ -682,3 +682,29 @@ body {
     height: 150px;
     background: #2a2a2a;
 }
+
+#members-shelf, #member-releases-shelf, #appearance-shelf, #membership-shelf {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    cursor: grab;
+}
+
+#members-shelf:active, #member-releases-shelf:active, #appearance-shelf:active, #membership-shelf:active {
+    cursor: grabbing;
+}
+
+#members-shelf::-webkit-scrollbar, #member-releases-shelf::-webkit-scrollbar, #appearance-shelf::-webkit-scrollbar, #membership-shelf::-webkit-scrollbar {
+    height: 6px;
+}
+
+#members-shelf::-webkit-scrollbar-track, #member-releases-shelf::-webkit-scrollbar-track, #appearance-shelf::-webkit-scrollbar-track, #membership-shelf::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 3px;
+}
+
+#members-shelf::-webkit-scrollbar-thumb, #member-releases-shelf::-webkit-scrollbar-thumb, #appearance-shelf::-webkit-scrollbar-thumb, #membership-shelf::-webkit-scrollbar-thumb {
+    background: #555555;
+    border-radius: 3px;
+}
