@@ -20,6 +20,8 @@ class Artist(db.Model):
     hidden = db.Column(db.Boolean, nullable=True)
     primary_artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=True)
     display_name = db.Column(db.String(200), nullable=True)
+    musicbrainz_id = db.Column(db.String(36), nullable=True)
+    discography_country = db.Column(db.String(2), nullable=True)
     
     primary_artist = db.relationship('Artist', remote_side=[id], backref=db.backref('aliases', lazy=True))
 
@@ -29,6 +31,9 @@ class Membership(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
+    begin_date = db.Column(db.Date, nullable=True)
+    end_date = db.Column(db.Date, nullable=True)
+    is_current = db.Column(db.Boolean, default=True)
 
     artist = db.relationship('Artist', foreign_keys=[artist_id], backref=db.backref('group_memberships', lazy=True))
     group = db.relationship('Artist', foreign_keys=[group_id], backref=db.backref('members', lazy=True))
@@ -58,6 +63,8 @@ class Release(db.Model):
     notes = db.Column(db.Text)
     hidden = db.Column(db.Boolean, default=False)
     format_override = db.Column(db.String(50), nullable=True)
+    musicbrainz_id = db.Column(db.String(36), nullable=True)
+    mb_cover_image_url = db.Column(db.String(500), nullable=True)
 
 
     artist = db.relationship('Artist', backref=db.backref('releases', lazy=True))
@@ -81,3 +88,13 @@ class ArtistAppearance(db.Model):
 
     artist = db.relationship('Artist', backref=db.backref('appearances', lazy=True))
     release = db.relationship('Release', backref=db.backref('appearing_artists', lazy=True))
+
+class DiscographyExclusion(db.Model):
+    __tablename__ = 'discography_exclusions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    musicbrainz_release_group_id = db.Column(db.String(36), nullable=False)
+    artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
+    reason = db.Column(db.String(200), nullable=True)
+
+    artist = db.relationship('Artist', backref=db.backref('discography_exclusions', lazy=True))
