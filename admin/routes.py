@@ -326,7 +326,14 @@ def fetch_artist_musicbrainz(id):
         db.session.rollback()
         return jsonify({'error': 'Database commit failed'}), 500
 
-import time    
+    return jsonify({
+        'success': True,
+        'mbid': mbid,
+        'members_updated': members_updated,
+        'members_orphaned': len(orphaned),
+        'orphaned_names': orphaned,
+        'name': data.get('name')
+    })
 
 @admin_bp.route('/api/artists/<int:id>/set-musicbrainz', methods=['POST'])
 @login_required
