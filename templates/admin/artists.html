@@ -62,6 +62,7 @@
         <button onclick="closeEditor()" style="padding: 0.6rem 1.2rem; background: #444; color: #eee; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
         <span id="save-status" style="line-height: 2.2; font-size: 0.85rem; color: #888;"></span>
         <button onclick="fetchDiscogs()" style="padding: 0.6rem 1.2rem; background: #333; color: #eee; border: 1px solid #555; border-radius: 4px; cursor: pointer;">Fetch from Discogs</button>
+        <button onclick="fetchMusicBrainz()" style="padding: 0.6rem 1.2rem; background: #333; color: #eee; border: 1px solid #555; border-radius: 4px; cursor: pointer;">Fetch from MusicBrainz</button>
     </div>
 </div>
 
@@ -189,5 +190,54 @@
         }
     });
 }
+function fetchMusicBrainz() {
+    if (!currentArtist) return;
+    document.getElementById('save-status').textContent = 'Fetching from MusicBrainz...';
+    
+    fetch(`/admin/api/artists/${currentArtist.id}/fetch-musicbrainz`, {
+        method: 'POST'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('save-status').textContent = 
+                `Fetched! MBID: ${data.mbid} · ${data.members_updated} membership(s) updated`;
+        } else if (data.needs_selection) {
+            showCandidates(data.candidates);
+        } else {
+            document.getElementById('save-status').textContent = data.error || 'Failed.';
+        }
+    });
+}
+
+function showCandidates(candidates) {
+    const status = document.getElementById('save-status');
+    status.innerHTML = 'Multiple matches found — pick one:<br>' + 
+        candidates.map(c => 
+            `<a href="#" onclick="selectCandidate('${c.id}', '${c.name}'); return false;" 
+                style="display:block; color:#aaa; margin-top:4px; font-size:0.8rem;">
+                ${c.name}${c.disambiguation ? ' (' + c.disambiguation + ')' : ''} 
+                ${c.country ? '· ' + c.country : ''} · score: ${c.score}
+            </a>`
+        ).join('');
+}
+
+function selectCandidate(mbid, name) {
+    document.getElementById('save-status').textContent = `Setting MBID for ${name}...`;
+    fetch(`/admin/api/artists/${currentArtist.id}/set-musicbrainz`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mbid })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            currentArtist.musicbrainz_id = mbid;
+            // Now fetch with the confirmed MBID
+            fetchMusicBrainz();
+        }
+    });
+}
+
 </script>
 {% endblock %}

@@ -1,7 +1,8 @@
 from flask import render_template, request, redirect, url_for, session, jsonify
 from functools import wraps
-import os
+import os, time
 from admin import admin_bp
+from models import db, Release, Artist, Format, Membership
 
 def login_required(f):
     @wraps(f)
@@ -120,6 +121,7 @@ def search_artists():
         'hidden': a.hidden or False,
         'is_various_artists': a.is_various_artists or False,
         'discogs_artist_id': a.discogs_artist_id,
+        'musicbrainz_id': a.musicbrainz_id,
         'primary_artist_id': a.primary_artist_id,
         'primary_artist_name': a.primary_artist.name if a.primary_artist else None
     } for a in results])
@@ -192,3 +194,148 @@ def fetch_artist_discogs(id):
         'image_url': artist.image_url,
         'profile': artist.profile
     })
+
+import time
+
+@admin_bp.route('/api/artists/<int:id>/fetch-musicbrainz', methods=['POST'])
+@login_required
+def fetch_artist_musicbrainz(id):
+    artist = db.get_or_404(Artist, id)
+    from datetime import date
+    
+    headers = {
+        'User-Agent': 'BasementStacks/1.0 (nickmenzhuber@gmail.com)'
+    }
+    
+    # Step 1: Find or confirm MBID
+    if artist.musicbrainz_id:
+        mbid = artist.musicbrainz_id
+    else:
+        response = http_requests.get(
+            'https://musicbrainz.org/ws/2/artist',
+            headers=headers,
+            params={'query': f'artist:"{artist.name}"', 'fmt': 'json', 'limit': 5}
+        )
+        candidates = response.json().get('artists', [])
+        if not candidates:
+            return jsonify({'error': 'No MusicBrainz matches found', 'candidates': []})
+        
+        if len(candidates) == 1 or candidates[0]['score'] == 100:
+            mbid = candidates[0]['id']
+            artist.musicbrainz_id = mbid
+            db.session.commit()
+        else:
+            return jsonify({
+                'needs_selection': True,
+                'candidates': [{
+                    'id': c['id'],
+                    'name': c['name'],
+                    'disambiguation': c.get('disambiguation', ''),
+                    'country': c.get('country', ''),
+                    'score': c['score']
+                } for c in candidates]
+            })
+    
+    # Step 2: Fetch artist relationships
+    time.sleep(1)
+    response = http_requests.get(
+        f'https://musicbrainz.org/ws/2/artist/{mbid}',
+        headers=headers,
+        params={'inc': 'artist-rels', 'fmt': 'json'}
+    )
+    data = response.json()
+    
+    # Helper to parse partial dates
+    def parse_mb_date(date_str):
+        if not date_str:
+            return None
+        parts = date_str.split('-')
+        try:
+            year = int(parts[0])
+            month = int(parts[1]) if len(parts) > 1 else 1
+            day = int(parts[2]) if len(parts) > 2 else 1
+            return date(year, month, day)
+        except (ValueError, IndexError):
+            return None
+    
+    # Step 3: MusicBrainz is now source of truth for membership
+    members_updated = 0
+    mb_member_mbrids = set()
+    
+    for rel in data.get('relations', []):
+        if rel.get('type') == 'member of band' and rel.get('direction') == 'backward':
+            member_name = rel['artist']['name']
+            member_mbid = rel['artist']['id']
+            begin = rel.get('begin')
+            end = rel.get('end')
+            is_current = not rel.get('ended', False)
+            
+            mb_member_mbrids.add(member_mbid)
+            
+            # Find or create member artist
+            member = Artist.query.filter(
+                db.or_(
+                    Artist.musicbrainz_id == member_mbid,
+                    Artist.name == member_name
+                )
+            ).first()
+            
+            if not member:
+                # Create new artist with just name + MBID
+                member = Artist(
+                    name=member_name,
+                    sort_name=member_name,
+                    musicbrainz_id=member_mbid,
+                    hidden=False
+                )
+                db.session.add(member)
+                db.session.flush()
+            else:
+                if not member.musicbrainz_id:
+                    member.musicbrainz_id = member_mbid
+            
+            # Find or create membership
+            membership = Membership.query.filter_by(
+                artist_id=member.id,
+                group_id=artist.id
+            ).first()
+            
+            if not membership:
+                membership = Membership(
+                    artist_id=member.id,
+                    group_id=artist.id
+                )
+                db.session.add(membership)
+            
+            # Update dates from MB
+            membership.begin_date = parse_mb_date(begin)
+            membership.end_date = parse_mb_date(end)
+            membership.is_current = is_current
+            members_updated += 1
+    
+    # Identify orphaned memberships (in our DB but not in MB)
+    orphaned = []
+    for m in Membership.query.filter_by(group_id=artist.id).all():
+        if m.artist.musicbrainz_id and m.artist.musicbrainz_id not in mb_member_mbrids:
+            orphaned.append(m.artist.name)
+       
+    try:
+        db.session.commit()
+    except Exception as e:
+        print(f"MB fetch commit failed: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Database commit failed'}), 500
+
+import time    
+
+@admin_bp.route('/api/artists/<int:id>/set-musicbrainz', methods=['POST'])
+@login_required
+def set_artist_musicbrainz(id):
+    artist = db.get_or_404(Artist, id)
+    data = request.get_json()
+    mbid = data.get('mbid')
+    if not mbid:
+        return jsonify({'error': 'No MBID provided'}), 400
+    artist.musicbrainz_id = mbid
+    db.session.commit()
+    return jsonify({'success': True, 'mbid': mbid})

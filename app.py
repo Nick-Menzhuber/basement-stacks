@@ -189,6 +189,32 @@ def artist_detail(id):
     
     appearances = ArtistAppearance.query.filter_by(artist_id=artist.id).all()
     
+    def member_has_collection_overlap(member_artist, group_id):
+        """Check if member was in the band during years we have releases for that band"""
+        membership = Membership.query.filter_by(artist_id=member_artist.id, group_id=group_id).first()
+        
+        if not membership:
+            return False
+        
+        # If no dates at all, include them (Discogs-only membership, no MB data)
+        if not membership.begin_date and not membership.end_date:
+            return True
+        
+        # Get the band's releases in collection
+        band_releases = Release.query.filter_by(artist_id=group_id, hidden=False).all()
+        
+        for r in band_releases:
+            if not r.release_year:
+                continue
+            year = r.release_year
+            begin_year = membership.begin_date.year if membership.begin_date else None
+            end_year = membership.end_date.year if membership.end_date else None
+            
+            if begin_year and year >= begin_year and (not end_year or year <= end_year):
+                return True
+        
+        return False
+
     member_groups = Artist.query.join(
         Membership, Membership.group_id == Artist.id
     ).join(
@@ -196,6 +222,11 @@ def artist_detail(id):
     ).filter(
         Membership.artist_id == artist.id
     ).distinct().all()
+    
+    # Filter to only groups where artist has collection overlap
+    member_groups = [g for g in member_groups if member_has_collection_overlap(artist, g.id)]
+
+    # ... rest continues as before
 
     # Add collaboration releases as appearances
     collab_releases = Release.query.join(Artist).filter(
@@ -212,7 +243,11 @@ def artist_detail(id):
     members = []
     member_releases = []
     if artist.members:
-        members = [m.artist for m in artist.members]
+        members = [
+            m.artist for m in artist.members 
+            if member_has_collection_overlap(m.artist, artist.id) and not m.artist.hidden
+        ]
+
         seen = set()
         for member in members:
             for r in Release.query.filter_by(artist_id=member.id).filter(Release.hidden == False).order_by(Release.release_year).all():
