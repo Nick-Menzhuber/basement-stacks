@@ -39,6 +39,20 @@ def from_json_filter(value):
     except:
         return []
 
+@app.template_filter('clean_discogs')
+def clean_discogs_markup(text):
+    if not text:
+        return text
+    # [a=Artist Name] or [a123=Artist Name] → Artist Name
+    text = re.sub(r'\[a\d*=([^\]]+)\]', lambda m: m.group(1).title(), text)
+    # [l=Label Name] → Label Name
+    text = re.sub(r'\[l=([^\]]+)\]', r'\1', text)
+    # TODO: [m=123456] → look up master release title, link internally or via Discogs
+    text = re.sub(r'\[m=\d+\]', '', text)
+    # [url=...]display[/url] → display
+    text = re.sub(r'\[url=[^\]]*\]([^\[]*)\[/url\]', r'\1', text)
+    return text
+
 @app.route('/')
 def welcome():
     releases = Release.query.join(Artist).order_by(Artist.sort_name, Release.release_year).limit(10).all()

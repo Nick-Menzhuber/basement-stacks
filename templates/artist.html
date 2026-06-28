@@ -22,9 +22,15 @@
             {% endif %}
             <div id="artist-info">
                 <h1>{{ artist.name }}</h1>
-                <p class="artist-count">{{ releases|length }} release{{ 's' if releases|length != 1 else '' }} in the stacks</p>
+                <p class="artist-count">
+                    {% if releases|length == 0 and appearance_releases|length > 0 %}
+                        {{ appearance_releases|length }} appearance{{ 's' if appearance_releases|length != 1 else '' }} in the stacks
+                    {% else %}
+                        {{ releases|length }} release{{ 's' if releases|length != 1 else '' }} in the stacks
+                    {% endif %}
+                </p>
                 {% if artist.custom_profile or artist.profile %}
-                <p class="artist-profile">{{ artist.custom_profile or artist.profile }}</p>
+                <p class="artist-profile">{{ (artist.custom_profile or artist.profile)|clean_discogs }}</p>
                 {% endif %}
                 {% if artist.urls %}
                     {% set url_list = artist.urls | from_json %}
@@ -59,7 +65,8 @@
         </div>
         {% if appearance_releases %}
 <div id="artist-appearances">
-    <h3>Also Appears On</h3>
+    <div id="artist-appearances">
+        <h3>{% if releases|length == 0 %}Appears On{% else %}Also Appears On{% endif %}</h3>
     <div id="appearance-shelf">
         {% for release in appearance_releases %}
         <a href="/release/{{ release.id }}" class="shelf-item">
