@@ -2,11 +2,13 @@ from flask import Flask, render_template, jsonify, request, json
 from sqlalchemy import case
 from models import db, Release, Artist, Format, ArtistAppearance, Membership
 from dotenv import load_dotenv
+from datetime import date
 load_dotenv()
 import os
 import re
 import json
 import unicodedata
+import random
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-change-in-prod')
@@ -210,7 +212,8 @@ def artist_detail(id):
         if not membership:
             return False
         
-        # If no dates at all, include them (Discogs-only membership, no MB data)
+        # If no dates at all, include them (MB may just not have date data)
+        # Handle orphans manually via hidden=True
         if not membership.begin_date and not membership.end_date:
             return True
         
@@ -257,17 +260,27 @@ def artist_detail(id):
     members = []
     member_releases = []
     if artist.members:
-        members = [
-            m.artist for m in artist.members 
-            if member_has_collection_overlap(m.artist, artist.id) and not m.artist.hidden
-        ]
-
+        group_id = artist.id
+        
+        def member_sort_key(member_artist):
+            has_releases = Release.query.filter_by(artist_id=member_artist.id, hidden=False).first() is not None
+            membership = Membership.query.filter_by(artist_id=member_artist.id, group_id=group_id).first()
+            begin = membership.begin_date if membership and membership.begin_date else date.max
+            return (0 if has_releases else 1, begin)
+        
+        members = sorted(
+            [m.artist for m in artist.members 
+             if member_has_collection_overlap(m.artist, artist.id) and not m.artist.hidden],
+            key=member_sort_key
+        )
+        import random
         seen = set()
         for member in members:
             for r in Release.query.filter_by(artist_id=member.id).filter(Release.hidden == False).order_by(Release.release_year).all():
                 if r.id not in seen:
                     seen.add(r.id)
                     member_releases.append((member, r))
+        random.shuffle(member_releases)
     
     return render_template('artist.html', artist=artist, releases=releases, 
                          appearance_releases=appearance_releases, 

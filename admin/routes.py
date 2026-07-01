@@ -308,8 +308,14 @@ def fetch_artist_musicbrainz(id):
                 db.session.add(membership)
             
             # Update dates from MB
-            membership.begin_date = parse_mb_date(begin)
-            membership.end_date = parse_mb_date(end)
+            new_begin = parse_mb_date(begin)
+            new_end = parse_mb_date(end)
+            
+            # Take earliest begin and latest end (handles rejoining members)
+            if new_begin and (not membership.begin_date or new_begin < membership.begin_date):
+                membership.begin_date = new_begin
+            if new_end and (not membership.end_date or new_end > membership.end_date):
+                membership.end_date = new_end
             membership.is_current = is_current
             members_updated += 1
     
